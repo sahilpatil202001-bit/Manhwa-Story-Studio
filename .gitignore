@@ -49,7 +49,11 @@ client_secrets.json
 
 # Runtime Data, Logs & Generated Outputs
 data/
-exports/
+exports/*
+!exports/demo_gemini_*.wav
+!exports/voice_refs/
+exports/voice_refs/*
+!exports/voice_refs/*.wav
 logs/
 *.log
 temp/
