@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing, Linting & Coverage
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ML & Model Caches
+.cache/
+
+# Secrets & Credentials (keep .env.example)
+.env
+.env.local
+.env.*.local
+config/youtube_token.json
+config/youtube_client_secrets.json
+config/instagram_credentials.json
+client_secrets.json
+*.pem
+*.key
+
+# Runtime Data, Logs & Generated Outputs
+data/
+exports/
+logs/
+*.log
+temp/
+scratch/
+output/
+
+# Downloaded Manhwa Chapters (keep README.txt)
+assets/inbox/*
+!assets/inbox/README.txt
+
+# Generated Voice Demos
+assets/audio/voice_demos/
+
+# Local Archives & Saved Notebooks / Browser Dumps
+studio_cloud.zip
+*.ipynb_checkpoints/
+Untitled7.ipynb - Colab_files/
+
+# IDEs & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini

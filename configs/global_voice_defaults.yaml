@@ -1,0 +1,8 @@
+narrator_voice_id: gemini:Puck
+narrator_rate: +2%
+narrator_pitch: +0Hz
+protagonist_voice_id: gemini:Puck
+protagonist_rate: +2%
+protagonist_pitch: +0Hz
+bgm_ducking_volume: 0.12
+bgm_normal_volume: 0.35

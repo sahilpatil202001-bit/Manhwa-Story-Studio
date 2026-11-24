@@ -1,0 +1,178 @@
+series_name: eleceed
+series_slug: eleceed
+genre: murim
+tone: dark
+narrator_voice:
+  provider: gemini
+  voice_id: gemini:Puck
+  rate: +2%
+  pitch: +0Hz
+  volume: +0%
+  description: Dynamic Studio Narrator (gemini:Puck)
+character_voices:
+  Protagonist:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young Martial Artist (gemini:Puck)
+  Protagonist (Cold):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cold, Fearless Demonic Aura
+  Protagonist (Wounded):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Injured / Intense Struggle
+  Loyal Guard / Rival:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Loyal Swordsman / Rival Disciple (gemini:Puck)
+  Sect Leader / Lord:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Supreme Patriarch / Cult Lord (gemini:Puck)
+  Elder / Master:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Clan Elder / Grandmaster (gemini:Puck)
+  Villain / Assassin:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Dangerous Enemy / Blood Cultist (gemini:Puck)
+  System / AI:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Sleek Indian Female System / Spirit Guide (Kore)
+  Heroine / Lady:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Classy Female Martial Artist / Heroine (Kore)
+  Mother:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Maternal Figure (Kore)
+  Girl:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young Female Disciple (Kore)
+archetype_voices:
+  hero_male:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young heroic Indian male protagonist - Puck (+2%, +0Hz)
+  hero_young:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Teenage/young Indian male protagonist - Puck
+  rival_cool:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cool stoic swordsman / knight - Puck
+  schemer_witty:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cunning, witty, charismatic young Indian lead - Puck
+  female_lead:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Single constant voice - Puck (+2%, +0Hz)
+  female_young:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Single constant voice - Puck (+2%, +0Hz)
+  elder_master:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Veteran master / clan leader - Puck
+  villain_dark:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Dangerous antagonist / assassin - Puck
+  crowd_guard:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Guards / soldiers / disciples - Puck
+  system_ai:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Single constant voice - Puck (+2%, +0Hz)
+bgm_genre: murim_traditional
+bgm_ducking_volume: 0.12
+bgm_normal_volume: 0.35
+subtitle_style:
+  font_name: Arial
+  font_size: 44
+  primary_color: '&H00FFFFFF'
+  secondary_color: '&H0000FFFF'
+  outline_color: '&H00000000'
+  back_color: '&H80000000'
+  outline_width: 4
+  shadow_depth: 2
+  bold: true
+  pop_animation: true
+thumbnail_tags:
+- हिन्दी Manhwa
+- Comic Dub
+- Full Recap

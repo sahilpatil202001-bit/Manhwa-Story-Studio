@@ -1,0 +1,361 @@
+series_name: Nano Machine
+series_slug: nano_machine
+genre: murim
+tone: dark_heroic_intense
+narrator_voice:
+  provider: gemini
+  voice_id: gemini:Puck
+  rate: +2%
+  pitch: +0Hz
+  volume: +0%
+  description: Main Narrator (gemini:Charon)
+character_voices:
+  Nano:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Nano Machine - natural, attractive Indian female AI assistant
+  Nano (Normal):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Nano Machine - sleek, charming Indian guide
+  Nano (Warning):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Nano Machine - urgent high-energy alert
+  Nano (Emergency):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Nano Machine - emergency danger alert
+  Nano (Analysis):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Nano Machine - fast meridian & martial scan
+  Nano (Combat):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Nano Machine - rapid combat simulation
+  System:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Nano Machine AI interface
+  System (Warning):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: System Emergency Alert
+  System (Analysis):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: System Medical & Martial Analysis
+  Cheon Yeo-Woon:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: 'Cheon Yeo-Woon - Gemini Indian Human: Charon'
+  Cheon Yeo-Woon (Normal):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cheon Yeo-Woon - sharp & composed young master
+  Cheon Yeo-Woon (Cold):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cheon Yeo-Woon - cold, sharp, fearless aura
+  Cheon Yeo-Woon (Ruthless):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cheon Yeo-Woon - ruthless dominance
+  Cheon Yeo-Woon (Wounded):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cheon Yeo-Woon - intense battle strain
+  Cheon Yeo-Woon (Pain):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cheon Yeo-Woon - meridian reconstruction
+  Cheon Yeo-Woon (Enraged):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cheon Yeo-Woon - explosive battle shout
+  Cheon Yeo-Woon (Respectful):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cheon Yeo-Woon - warm & respectful
+  Yeo-Woon:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cheon Yeo-Woon
+  Yeowun:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cheon Yeo-Woon
+  Guard Jang:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Guard Jang - loyal Indian Hinglish swordsman
+  Guard Jang (Wounded):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Guard Jang - urgent battle shout
+  Sub-Meng:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Sub-Meng - energetic muscular ally
+  Cadet:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young Academy Cadet / Rival
+  Instructor:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Demonic Academy Instructor
+  Lord:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Lord of the Demonic Cult
+  Lord Cheon:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Lord Cheon Yujong - Supreme Demon Lord
+  Grand Guardian:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Grand Guardian Marakim
+  Elder:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Clan Elder
+  Assassin:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Masked Assassin / Enemy
+  Lady Hwa:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Lady Hwa (Mother)
+  Mun Ku:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Mun Ku - lively, energetic young Indian heroine
+  Lady Mun:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Mun Ku - lively young heroine
+  Girl:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young female disciple
+  Lady:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Noble lady / martial artist
+  Woman:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Female character
+  Mother:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Mother / maternal figure
+  Noblewoman:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Noblewoman of the Demonic Cult
+archetype_voices:
+  hero_male:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young heroic Indian male protagonist - Charon (+2%, +0Hz)
+  hero_young:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Teenage/young Indian male protagonist - energetic human voice
+  rival_cool:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cool young Indian Hinglish swordsman / rival
+  schemer_witty:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cunning, witty, charismatic young Indian lead
+  female_lead:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Heroine / female lead - warm, attractive Indian female
+  female_young:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young maiden / lively Indian female heroine
+  elder_master:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Veteran master / clan leader - authoritative Devanagari male
+  villain_dark:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Dangerous antagonist / assassin - deep Devanagari male
+  crowd_guard:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Guards / soldiers / disciples - natural Indian male
+  system_ai:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Sleek, attractive Indian Female AI Assistant
+bgm_genre: murim_traditional
+bgm_ducking_volume: 0.12
+bgm_normal_volume: 0.35
+subtitle_style:
+  font_name: Arial
+  font_size: 44
+  primary_color: '&H00FFFFFF'
+  secondary_color: '&H0000FFFF'
+  outline_color: '&H00000000'
+  back_color: '&H80000000'
+  outline_width: 4
+  shadow_depth: 2
+  bold: true
+  pop_animation: true
+thumbnail_tags:
+- नैनो मशीन
+- Nano Machine Hindi
+- Demonic Cult
+- Full Recap

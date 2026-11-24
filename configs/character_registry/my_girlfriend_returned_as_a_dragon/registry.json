@@ -1,0 +1,40 @@
+{
+  "series_name": "My Girlfriend Returned as a Dragon",
+  "series_slug": "my_girlfriend_returned_as_a_dragon",
+  "characters": {
+    "girl": {
+      "char_id": "girl",
+      "canonical_name": "Girl",
+      "aliases": [],
+      "gender": "female",
+      "age_group": "young_adult",
+      "look_archetype": "cute_girl",
+      "visual_description": "Female dragon character speaking with an intense, curious vibe",
+      "face_image_path": "faces/girl.jpg",
+      "face_dhash": "56a2001c3866f4fd",
+      "gemini_voice_id": "gemini:Leda",
+      "voice_rate": "+4%",
+      "voice_pitch": "+0Hz",
+      "confirmed": true,
+      "source": "gemini_vision",
+      "voice_locked": true
+    },
+    "boy": {
+      "char_id": "boy",
+      "canonical_name": "Boy",
+      "aliases": [],
+      "gender": "male",
+      "age_group": "young_adult",
+      "look_archetype": "young_hero",
+      "visual_description": "Young male character with dark hair and casual outfit.",
+      "face_image_path": "faces/boy.jpg",
+      "face_dhash": "3b3d2f931a39333e",
+      "gemini_voice_id": "gemini:Puck",
+      "voice_rate": "+2%",
+      "voice_pitch": "+0Hz",
+      "confirmed": true,
+      "source": "gemini_vision",
+      "voice_locked": true
+    }
+  }
+}

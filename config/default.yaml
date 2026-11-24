@@ -1,0 +1,80 @@
+# Manhwa Story Studio - Default Project Configuration
+
+project:
+  series: "Myst, Might, Mayhem"
+  chapter: 1
+  title: "Prologue"
+  target_duration_seconds: 180.0
+  allow_duration_trim: true
+  platform: "shorts" # "shorts" (<=60s vertical) or "standard_vertical" (<=180s vertical)
+
+video:
+  width: 1080
+  height: 1920
+  fps: 30
+  codec: "libx264"
+  crf: 22
+  preset: "medium"
+  pixel_format: "yuv420p"
+  faststart: true
+
+audio:
+  codec: "aac"
+  bitrate_kbps: 192
+  sample_rate: 44100
+  channels: 2
+  music_volume: 0.12
+  sfx_volume: 0.4
+  narration_volume: 1.0
+  ducking_factor: 0.25 # Lower music to 25% of its volume during narration
+  fade_in_seconds: 1.5
+  fade_out_seconds: 2.0
+  music_file: "assets/audio/cinematic_suspense.wav" # path to licensed cinematic music track
+  sfx_dir: null
+
+voice:
+  provider: "edge-tts"
+  voice_id: "hi-IN-MadhurNeural"
+  fallback_voice_id: "hi-IN-SwaraNeural"
+  language: "hi"
+  speech_rate: "+6%"
+  pitch: "+0Hz" # Natural human pitch
+  style: "cinematic"
+  timeout_seconds: 30
+  max_retries: 3
+
+subtitles:
+  enabled: true
+  burn_in: true
+  export_external_srt: true
+  export_ass: true
+  language: "hi"
+  font_name: "Arial"
+  font_size: 24
+  font_color: "&H00FFFFFF" # ASS format hex (White)
+  outline_color: "&H00000000" # ASS format hex (Black)
+  outline_width: 3
+  bottom_margin: 180 # Margin for Shorts UI overlays
+  max_words_per_line: 7
+
+motion:
+  default_preset: "slow_zoom_in"
+  zoom_scale: 1.08 # Max zoom ratio
+  pan_speed: 0.05
+  transition_type: "fade" # "none", "fade", "crossfade"
+  transition_duration_seconds: 0.5
+  fill_mode: "blur_background" # "black_letterbox", "blur_background"
+
+rights:
+  status: "permission_granted" # "owned", "licensed", "permission_granted", "public_domain_verified", "other_authorized_use", "unknown", "prohibited"
+  reference: "User authorized production materials"
+  attribution: "Original artwork copyright by author/illustrator"
+  allow_commercial: false
+  allow_modifications: true
+
+paths:
+  artwork_dir: "artwork"
+  audio_dir: "audio"
+  renders_dir: "renders"
+  subtitles_dir: "subtitles"
+  scripts_dir: "scripts"

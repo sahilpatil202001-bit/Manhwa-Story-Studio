@@ -1,0 +1,110 @@
+{
+  "series_name": "eleceed",
+  "series_slug": "eleceed",
+  "characters": {
+    "subin_s_uncle": {
+      "char_id": "subin_s_uncle",
+      "canonical_name": "Subin's Uncle",
+      "aliases": [
+        "Loyal Guard / Rival",
+        "Elder / Master",
+        "Sect Leader / Lord"
+      ],
+      "gender": "male",
+      "age_group": "young_adult",
+      "estimated_age": "",
+      "role": "supporting",
+      "look_archetype": "supporting_male",
+      "visual_description": "Man with dark hair and striped suit looking surprised",
+      "face_image_path": "faces/subin_s_uncle.jpg",
+      "face_dhash": "56367544cda4e6cf",
+      "gemini_voice_id": "gemini:Fenrir",
+      "voice_rate": "-2%",
+      "voice_pitch": "+0Hz",
+      "voice_locked": true,
+      "confirmed": true,
+      "source": "gemini_vision"
+    },
+    "subin": {
+      "char_id": "subin",
+      "canonical_name": "Subin",
+      "aliases": [
+        "Heroine / Lady",
+        "Girl"
+      ],
+      "gender": "female",
+      "age_group": "teen",
+      "estimated_age": "",
+      "role": "supporting",
+      "look_archetype": "cute_girl",
+      "visual_description": "Female student in school uniform sitting at desk.",
+      "face_image_path": "faces/subin.jpg",
+      "face_dhash": "13595c3b616970c8",
+      "gemini_voice_id": "gemini:Leda",
+      "voice_rate": "+4%",
+      "voice_pitch": "+0Hz",
+      "voice_locked": true,
+      "confirmed": true,
+      "source": "gemini_vision"
+    },
+    "jiwoo_seo": {
+      "char_id": "jiwoo_seo",
+      "canonical_name": "Jiwoo Seo",
+      "aliases": [
+        "Protagonist"
+      ],
+      "gender": "male",
+      "age_group": "teen",
+      "estimated_age": "",
+      "role": "supporting",
+      "look_archetype": "young_hero",
+      "visual_description": "Blonde hair, lying in hospital bed, wrapped in bandages",
+      "face_image_path": "faces/jiwoo_seo.jpg",
+      "face_dhash": "9878e64b5919cd4f",
+      "gemini_voice_id": "gemini:Charon",
+      "voice_rate": "+0%",
+      "voice_pitch": "+0Hz",
+      "voice_locked": true,
+      "confirmed": true,
+      "source": "gemini_vision"
+    },
+    "villain_assassin": {
+      "char_id": "villain_assassin",
+      "canonical_name": "Villain / Assassin",
+      "aliases": [],
+      "gender": "male",
+      "age_group": "young_adult",
+      "estimated_age": "",
+      "role": "supporting",
+      "look_archetype": "villain_dark",
+      "visual_description": "Dark slicked-back hair with a sly, sinister grin.",
+      "face_image_path": "faces/villain_assassin.jpg",
+      "face_dhash": "0f9bb33175ab3273",
+      "gemini_voice_id": "gemini:Algenib",
+      "voice_rate": "-1%",
+      "voice_pitch": "+0Hz",
+      "voice_locked": true,
+      "confirmed": true,
+      "source": "gemini_vision"
+    },
+    "boy": {
+      "char_id": "boy",
+      "canonical_name": "Boy",
+      "aliases": [],
+      "gender": "male",
+      "age_group": "teen",
+      "estimated_age": "",
+      "role": "supporting",
+      "look_archetype": "young_hero",
+      "visual_description": "",
+      "face_image_path": null,
+      "face_dhash": null,
+      "gemini_voice_id": "gemini:Puck",
+      "voice_rate": "+2%",
+      "voice_pitch": "+0Hz",
+      "voice_locked": true,
+      "confirmed": true,
+      "source": "local_auto_cast"
+    }
+  }
+}

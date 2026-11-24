@@ -1,0 +1,292 @@
+series_name: My Girlfriend Returned as a Dragon
+series_slug: my_girlfriend_returned_as_a_dragon
+genre: urban_fantasy_romance
+tone: romantic_comedic_action
+narrator_voice:
+  provider: gemini
+  voice_id: gemini:Puck
+  rate: +2%
+  pitch: +0Hz
+  volume: +0%
+  description: Main Narrator (gemini:Charon)
+character_voices:
+  Boy:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Boyfriend - normal conversational
+  Boy (Normal):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Boyfriend - normal
+  Boy (Shocked):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Boyfriend - terrified panic at dragon power
+  Boy (Panicked):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Boyfriend - panicked
+  Boy (Romantic):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Boyfriend - gentle caring
+  Boy (Determined):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Boyfriend - serious protective
+  Boy (Angry):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Boyfriend - angry battle shout
+  Boy (Comedic):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Boyfriend - awkward comedy reaction
+  Boyfriend:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Boyfriend
+  Girl:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Girlfriend - sweet modern girl
+  Girl (Normal):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Girlfriend - sweet normal
+  Girl (Cute):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Girlfriend - cute, playful, pouting
+  Girl (Teasing):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Girlfriend - teasing
+  Girl (Romantic):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Girlfriend - affectionate whisper
+  Girl (Dragon):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Ancient Dragon Queen form - majestic goddess
+  Girl (Fierce):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Dragon Girl - protective dragon roar
+  Girl (Angry):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Dragon Girl - angry
+  Girlfriend:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Girlfriend
+  Dragon Girl:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Dragon Girl hybrid form
+  Dragon:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Ancient Dragon form
+  Dragon Elder:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Wise Ancient Dragon Elder
+  Dragon King:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Dragon King
+  Villain:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Sinister rival cultivator
+  System:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Dragon System Notification
+  Lady:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Generic lady / noble woman
+  Woman:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Adult female character
+  Mother:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Mother / maternal figure
+archetype_voices:
+  hero_male:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young heroic Indian male protagonist - Charon (+2%, +0Hz)
+  hero_young:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Teenage/young Indian male protagonist - energetic human voice
+  rival_cool:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cool young Indian Hinglish swordsman / rival
+  schemer_witty:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cunning, witty, charismatic young Indian lead
+  female_lead:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Heroine / female lead - warm, attractive Indian female
+  female_young:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young maiden / lively Indian female heroine
+  elder_master:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Veteran master / clan leader - authoritative Devanagari male
+  villain_dark:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Dangerous antagonist / assassin - deep Devanagari male
+  crowd_guard:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Guards / soldiers / disciples - natural Indian male
+  system_ai:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Sleek, attractive Indian Female AI Assistant
+bgm_genre: epic_fantasy_romance
+bgm_ducking_volume: 0.12
+bgm_normal_volume: 0.35
+subtitle_style:
+  font_name: Arial
+  font_size: 44
+  primary_color: '&H00FFFFFF'
+  secondary_color: '&H0000FFFF'
+  outline_color: '&H00000000'
+  back_color: '&H80000000'
+  outline_width: 4
+  shadow_depth: 2
+  bold: true
+  pop_animation: true
+thumbnail_tags:
+- My Girlfriend Returned as a Dragon
+- Girlfriend Dragon Hindi
+- Dragon Girlfriend Manhwa
+- Comic Dub
+- Full Recap

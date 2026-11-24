@@ -1,0 +1,178 @@
+series_name: Pick Me Up Infinite Gacha
+series_slug: pick_me_up_infinite_gacha
+genre: system_hunter
+tone: dark
+narrator_voice:
+  provider: gemini
+  voice_id: gemini:Puck
+  rate: +2%
+  pitch: +0Hz
+  volume: +0%
+  description: Main Narrator (gemini:Charon)
+character_voices:
+  Protagonist:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: 'Young Main Hunter / Player - Gemini Indian Human: Charon'
+  Protagonist (Cold):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Awakened Sovereign / Cool & Fearless
+  Protagonist (Battle):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Intense Combat Shout
+  System:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Sleek Indian Female System AI Interface
+  System (Warning):
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Emergency Quest / Penalty Alert
+  Rival:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cool Young S-Rank Hunter / Indian Hinglish Rival
+  Guild Master:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Veteran Guild Master
+  Boss / Villain:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Dungeon Boss / Antagonist
+  Heroine:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young Female Hunter / Indian Heroine
+  Girl:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young Female Character / Sister
+  Guard / Hunter:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Party Member / Side Hunter
+archetype_voices:
+  hero_male:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young heroic Indian male protagonist - Charon (+2%, +0Hz)
+  hero_young:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Teenage/young Indian male protagonist - energetic human voice
+  rival_cool:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cool young Indian Hinglish swordsman / rival
+  schemer_witty:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cunning, witty, charismatic young Indian lead
+  female_lead:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Heroine / female lead - warm, attractive Indian female
+  female_young:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young maiden / lively Indian female heroine
+  elder_master:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Veteran master / clan leader - authoritative Devanagari male
+  villain_dark:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Dangerous antagonist / assassin - deep Devanagari male
+  crowd_guard:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Guards / soldiers / disciples - natural Indian male
+  system_ai:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Sleek, attractive Indian Female AI Assistant
+bgm_genre: epic_synthwave
+bgm_ducking_volume: 0.12
+bgm_normal_volume: 0.35
+subtitle_style:
+  font_name: Arial
+  font_size: 44
+  primary_color: '&H00FFFFFF'
+  secondary_color: '&H0000FFFF'
+  outline_color: '&H00000000'
+  back_color: '&H80000000'
+  outline_width: 4
+  shadow_depth: 2
+  bold: true
+  pop_animation: true
+thumbnail_tags:
+- हिन्दी Manhwa
+- Comic Dub
+- Full Recap

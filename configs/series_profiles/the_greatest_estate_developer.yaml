@@ -1,0 +1,227 @@
+series_name: The Greatest Estate Developer
+series_slug: the_greatest_estate_developer
+genre: fantasy_comedy
+tone: witty_comedic_charismatic
+narrator_voice:
+  provider: gemini
+  voice_id: gemini:Puck
+  rate: +2%
+  pitch: +0Hz
+  volume: +0%
+  description: Main Narrator (gemini:Puck)
+character_voices:
+  Lloyd:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: 'Lloyd Frontera (Kim Suho) - Gemini Indian Human: Puck'
+  Lloyd Frontera:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Lloyd Frontera
+  Kim Suho:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Kim Suho
+  Javier:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Javier Asrahan (gemini:Puck)
+  Javier Asrahan:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Javier Asrahan
+  Alicia:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Queen Alicia Termina - regal monarch (Kore)
+  Podong:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cute summoned elemental spirit (Kore)
+  Poby:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cute summoned elemental spirit (Kore)
+  Count Frontera:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Count Arcos Frontera (gemini:Puck)
+  Countess Frontera:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Countess Frontera (Kore)
+  Julien:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Julien Frontera (Puck)
+  Protagonist:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Witty Young Indian Schemer / Main Lead (Puck)
+  Knight / Rival:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Handsome Stoic Loyal Swordsman (Puck)
+  Queen / Empress:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young Regal Monarch (Kore)
+  Noble Lady:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Classy Noblewoman / Heroine (Kore)
+  Lord / Count:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Noble Father / Elder (Puck)
+  Spirit / Mascot:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cute Energetic Summon / Mascot (Kore)
+  Villain:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Corrupt Noble / Antagonist (Puck)
+archetype_voices:
+  hero_male:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young heroic Indian male protagonist - Puck (+2%, +0Hz)
+  hero_young:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Teenage/young Indian male protagonist - Puck
+  rival_cool:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cool stoic swordsman / rival - Charon
+  schemer_witty:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Cunning, witty, charismatic young Indian lead - Puck
+  female_lead:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Heroine / female lead - classy warm Indian female (Kore)
+  female_young:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Young maiden / lively Indian female heroine (Aoede)
+  elder_master:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Veteran master / clan leader - Charon
+  villain_dark:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Dangerous antagonist / assassin - Fenrir
+  crowd_guard:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Guards / soldiers / disciples - Charon
+  system_ai:
+    provider: gemini
+    voice_id: gemini:Puck
+    rate: +2%
+    pitch: +0Hz
+    volume: +0%
+    description: Sleek, classy Indian Female AI Assistant (Kore)
+bgm_genre: fantasy_adventure
+bgm_ducking_volume: 0.12
+bgm_normal_volume: 0.35
+subtitle_style:
+  font_name: Arial
+  font_size: 44
+  primary_color: '&H00FFFFFF'
+  secondary_color: '&H0000FFFF'
+  outline_color: '&H00000000'
+  back_color: '&H80000000'
+  outline_width: 4
+  shadow_depth: 2
+  bold: true
+  pop_animation: true
+thumbnail_tags:
+- हिन्दी Manhwa
+- Comic Dub
+- Full Recap

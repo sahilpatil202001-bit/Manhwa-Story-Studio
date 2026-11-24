@@ -1,0 +1,15 @@
+[Unit]
+Description=YouTube 24/7 Manhwa Live Stream Service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/manhwa-story-studio
+Environment="YOUTUBE_STREAM_KEY=your_stream_key_here"
+ExecStart=/usr/bin/python3 live_stream/streamer.py -v /home/ubuntu/manhwa-story-studio/exports/marathons/myst_might_mayhem_marathon.mp4
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

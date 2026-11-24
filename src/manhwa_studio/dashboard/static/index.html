@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manhwa Story Studio Pro — Control Center</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+
+  <!-- Top Header -->
+  <header class="top-header">
+    <div class="brand-group">
+      <div class="brand-logo">M</div>
+      <div class="brand-title">
+        <h1>Manhwa Story Studio Pro</h1>
+        <span>Production Pipeline &bull; Multi-Voice Dubbing &bull; Marathon Engine</span>
+      </div>
+    </div>
+
+    <div class="status-pills">
+      <div class="pill" id="pill-external">
+        <span class="dot green" id="dot-external"></span>
+        <span id="txt-external">0 External Terminal Jobs</span>
+      </div>
+      <div class="pill" id="pill-queue">
+        <span class="dot cyan" id="dot-queue"></span>
+        <span id="txt-queue">Queue Idle</span>
+      </div>
+      <div class="pill">
+        <span class="dot" id="dot-gpu"></span>
+        <span id="txt-gpu">GPU Encoder</span>
+      </div>
+      <div class="pill" id="pill-cloud-gpu" onclick="toggleCloudGpuPanel()" style="cursor:pointer;"
+        title="Click to connect/monitor Colab T4 Cloud GPU Worker">
+        <span class="dot" id="dot-cloud-gpu"></span>
+        <span id="txt-cloud-gpu">Cloud GPU: Off</span>
+      </div>
+      <div class="pill">
+        <span class="dot" id="dot-gemini"></span>
+        <span id="txt-gemini">Gemini API</span>
+      </div>
+      <div class="pill">
+        <span id="txt-disk">Disk: -- GB free</span>
+      </div>
+      <button class="btn btn-sm" onclick="cleanTempSegmentsForSeries(true)"
+        title="Free SSD space by removing temp segment files for already-rendered chapters">&#129529; Clean
+        Temp</button>
+      <button class="btn btn-sm" onclick="refreshAll(true)">&#x21bb; Refresh</button>
+    </div>
+  </header>
+
+  <!-- Cloud GPU (Colab T4) Connection & Limit Monitor Bar -->
+  <div id="cloud-gpu-panel" style="display:none; background:#111827; border-bottom:1px solid #1f2937; padding:12px 24px;">
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:space-between;">
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <strong style="color:#38bdf8; font-size:13px;">&#9729; Colab Cloud GPU Worker (1 Job / GPU):</strong>
+        <input type="text" id="cloud-gpu-url" placeholder="https://xxxx.trycloudflare.com"
+          style="width:290px; padding:6px 10px; font-size:12px;" />
+        <input type="password" id="cloud-gpu-token" placeholder="Cloud Token (from Colab output)"
+          style="width:210px; padding:6px 10px; font-size:12px;" />
+        <button class="btn btn-sm btn-cyan" onclick="saveCloudGpuConfig()">Save &amp; Connect</button>
+        <button class="btn btn-sm" onclick="refreshCloudGpuStatus(true)">Check Limits</button>
+      </div>
+      <div id="cloud-gpu-telemetry" style="font-size:12px; color:#94a3b8;">
+        Not connected — start the Colab Worker cell from CLOUD_GPU_SETUP.md and paste the URL + Token.
+      </div>
+    </div>
+    <div id="cloud-gpu-warnings" style="display:none; margin-top:8px; padding:8px 12px; border-radius:6px; background:#451a03; color:#fde68a; font-size:12px;"></div>
+  </div>
+
+  <!-- Active External Terminal Processes Banner -->
+  <div class="external-banner" id="external-banner">
+    <div>
+      <strong style="color:#fbbf24; font-size:13px;">&#9889; Active Terminal Commands Detected (Protected):</strong>
+      <span style="font-size:12px; color:#cbd5e1; margin-left:6px;">
+        The Job Queue automatically avoids colliding with your running terminal tasks.
+      </span>
+      <div class="ext-list" id="external-list" style="margin-top:6px;"></div>
+    </div>
+    <div>
+      <label class="checkbox-label" style="color:#fde68a;">
+        <input type="checkbox" id="chk-wait-external" checked onchange="toggleWaitExternal(this.checked)" />
+        Wait for terminal jobs in same lane before starting queued jobs
+      </label>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" data-tab="tab-matrix" onclick="switchTab('tab-matrix')">
+      &#128202; Series &amp; Chapter Matrix
+      <span class="tab-badge" id="badge-series-count">0</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-builder" onclick="switchTab('tab-builder')">
+      &#9889; Batch &amp; Workflow Builder
+    </button>
+    <button class="tab-btn" data-tab="tab-marathons" onclick="switchTab('tab-marathons')">
+      &#127871; Marathon Movies
+      <span class="tab-badge" id="badge-marathon-count">0</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-studio" onclick="switchTab('tab-studio')">
+      &#127912; Scene &amp; Script Studio
+    </button>
+    <button class="tab-btn" data-tab="tab-social" onclick="switchTab('tab-social')">
+      &#128241; Social &amp; Reels (YT + IG)
+    </button>
+    <button class="tab-btn" data-tab="tab-voices" onclick="switchTab('tab-voices')">
+      &#127897; Voice Cast &amp; Profiles
+    </button>
+    <button class="tab-btn" data-tab="tab-env" onclick="switchTab('tab-env')">
+      &#128295; Studio `.env` Settings
+    </button>
+    <button class="tab-btn" data-tab="tab-queue" onclick="switchTab('tab-queue')">
+      &#9881; Job Queue &amp; Live Console
+      <span class="tab-badge" id="badge-queue-count">0</span>
+    </button>
+  </nav>
+
+  <!-- Main Workspace Content -->
+  <main class="main-container">
+
+    <!-- TAB 1: SERIES & CHAPTER MATRIX -->
+    <section id="tab-matrix" class="tab-panel active">
+      <div class="grid-4" style="margin-bottom: 18px;">
+        <div class="stat-box">
+          <div class="stat-label">Total Chapters Tracked</div>
+          <div class="stat-value" id="stat-total-chapters">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Unprocessed in Inbox</div>
+          <div class="stat-value" id="stat-inbox-chapters" style="color:var(--accent-amber);">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Scripts Ready (Screenplay)</div>
+          <div class="stat-value" id="stat-script-chapters" style="color:var(--accent-cyan);">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Pro Videos Rendered</div>
+          <div class="stat-value" id="stat-rendered-chapters" style="color:var(--accent-emerald);">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>Series Selection:</span>
+            <select id="matrix-series-select" style="width: 280px;" onchange="renderMatrixTable()"></select>
+            <select id="matrix-filter-select" style="width: 190px;" onchange="renderMatrixTable()">
+              <option value="all">All Chapters</option>
+              <option value="inbox">In Inbox Only</option>
+              <option value="script_no_render">Script Ready (Needs Render)</option>
+              <option value="rendered">Rendered</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="openNewSeriesModal()">&#10133; New Manhwa Series</button>
+            <button class="btn btn-cyan" onclick="quickFillInboxForSeries()">&#128229; Process Inbox Range</button>
+            <button class="btn btn-cyan" onclick="modernizeAllUnrenderedForSeries('rewrite')" title="Rewrite all unrendered pure-Hindi scripts into energetic Modern Hinglish with English words">&#9889; Upgrade Unrendered Scripts to Hinglish</button>
+            <button class="btn btn-emerald" onclick="quickFillRenderMissing()">&#127916; Render Unrendered
+              Chapters</button>
+            <button class="btn btn-primary" onclick="quickFillMarathonForSeries()">&#127871; Build Marathon</button>
+            <button class="btn" id="btn-clean-series-temp" onclick="cleanTempSegmentsForSeries(false)">&#129529; Clean
+              Temp Segments</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th>Ch #</th>
+                <th>Chapter Title</th>
+                <th>Status</th>
+                <th>Panels / Scenes</th>
+                <th>Est. Duration</th>
+                <th>Rendered Speeds</th>
+                <th>Assets</th>
+                <th>Quick Actions</th>
+              </tr>
+            </thead>
+            <tbody id="matrix-tbody">
+              <tr>
+                <td colspan="8" style="text-align:center; color:var(--text-secondary);">Loading workspace...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: BATCH & WORKFLOW BUILDER -->
+    <section id="tab-builder" class="tab-panel">
+      <div class="grid-2">
+
+        <!-- Card 1: Process Inbox -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">&#128229; 1. Process Inbox Chapters (AI Screenplay &amp; Ingest)</div>
+            <span class="badge badge-inbox">Script Lane</span>
+          </div>
+          <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:12px;">
+            Unpacks chapter zips, slices tall webtoon strips, and uses Gemini to write conversational Hindi dialogue.
+          </p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Series Name</label>
+              <input type="text" id="pi-series" value="Nano Machine" oninput="updateInboxPreview()" />
+            </div>
+            <div class="form-group">
+              <label>Inbox Folder Path</label>
+              <input type="text" id="pi-inbox" value="assets/inbox/Nano Machine" oninput="updateInboxPreview()" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Chapter Start</label>
+              <input type="number" id="pi-start" value="21" min="1" oninput="updateInboxPreview()" />
+            </div>
+            <div class="form-group">
+              <label>Chapter End</label>
+              <input type="number" id="pi-end" value="30" min="1" oninput="updateInboxPreview()" />
+            </div>
+          </div>
+          <div class="checkbox-row">
+            <label class="checkbox-label">
+              <input type="checkbox" id="pi-approve" checked onchange="updateInboxPreview()" /> Auto-approve manifest
+            </label>
+          </div>
+          <div class="cmd-preview" id="pi-cmd-preview"></div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="enqueueInboxJob()">&#10133; Add to Safe Queue</button>
+            <button class="btn" onclick="copyText('pi-cmd-preview')">Copy CLI Command</button>
+          </div>
+        </div>
+
+        <!-- Card 2: Pro Render Range -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">&#127916; 2. Pro Render Chapter Range (Multi-Voice + Camera FX)</div>
+            <span class="badge badge-rendered">Render Lane</span>
+          </div>
+          <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:12px;">
+            Synthesizes multi-character Hindi neural voices, mixes BGM with auto-ducking, renders camera motion, and
+            exports at your target speed.
+          </p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Series Slug</label>
+              <input type="text" id="pr-series" value="nano_machine" oninput="updateProRenderPreview()" />
+            </div>
+            <div class="form-group">
+              <label>Playback Speed</label>
+              <select id="pr-speed" onchange="updateProRenderPreview()">
+                <option value="1.0">1.0x (Normal Speed)</option>
+                <option value="1.25" selected>1.25x (Recommended Fast Pacing)</option>
+                <option value="1.5">1.5x (High Speed)</option>
+                <option value="1.75">1.75x</option>
+                <option value="2.0">2.0x</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Chapter Start</label>
+              <input type="number" id="pr-start" value="21" min="1" oninput="updateProRenderPreview()" />
+            </div>
+            <div class="form-group">
+              <label>Chapter End</label>
+              <input type="number" id="pr-end" value="30" min="1" oninput="updateProRenderPreview()" />
+            </div>
+            <div class="form-group">
+              <label>GPU Target (1 Job per GPU)</label>
+              <select id="pr-gpu-target">
+                <option value="local">&#128421; Local GPU (This PC)</option>
+                <option value="cloud">&#9729; Cloud GPU (Colab T4)</option>
+                <option value="auto_split">&#9889; Both GPUs Parallel (Auto-Split 1/GPU)</option>
+              </select>
+            </div>
+          </div>
+          <div class="checkbox-row">
+            <label class="checkbox-label">
+              <input type="checkbox" id="pr-burn-subs" onchange="updateProRenderPreview()" /> Burn Subtitles
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="pr-thumb-caps" onchange="updateProRenderPreview()" /> Thumbnail Captions
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="pr-cold-open" onchange="updateProRenderPreview()" /> Cold Open Teaser
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="pr-rebuild" onchange="updateProRenderPreview()" /> Rebuild Segments
+            </label>
+          </div>
+          <div class="cmd-preview" id="pr-cmd-preview"></div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="enqueueProRenderRangeJob()">&#10133; Queue Pro Render
+              Range</button>
+            <button class="btn btn-emerald" onclick="enqueueFullPipelineChain()">&#9889; 2-Step (Inbox +
+              Render)</button>
+            <button class="btn btn-cyan" onclick="enqueueFullArcAutopilot()">&#128640; 3-Step Full Arc Autopilot (Inbox
+              &rarr; Render &rarr; Marathon)</button>
+            <button class="btn" onclick="copyText('pr-cmd-preview')">Copy CLI</button>
+          </div>
+        </div>
+
+        <!-- Card 3: Marathon Movie Compiler -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">&#127871; 3. Compile Full-Movie Marathon</div>
+            <span class="badge badge-rendered">Render Lane</span>
+          </div>
+          <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:12px;">
+            Combines multiple rendered chapters with animated chapter title bumpers and unified YouTube timestamps.
+          </p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Series Name</label>
+              <input type="text" id="ma-series" value="Nano Machine" oninput="updateMarathonPreview()" />
+            </div>
+            <div class="form-group">
+              <label>Speed Variant</label>
+              <select id="ma-speed" onchange="updateMarathonRangeHelper()">
+                <option value="1.0">1.0x</option>
+                <option value="1.25" selected>1.25x</option>
+                <option value="1.5">1.5x</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Quick Range Start</label>
+              <input type="number" id="ma-start" value="21" min="1" oninput="updateMarathonRangeHelper()" />
+            </div>
+            <div class="form-group">
+              <label>Quick Range End</label>
+              <input type="number" id="ma-end" value="30" min="1" oninput="updateMarathonRangeHelper()" />
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Chapters List (Comma-separated)</label>
+            <input type="text" id="ma-chapters" value="21,22,23,24,25,26,27,28,29,30"
+              oninput="updateMarathonPreview()" />
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Output File Path</label>
+            <input type="text" id="ma-output" value="exports/marathons/nano_machine_ch21_to_ch30_movie_1.25x.mp4"
+              oninput="updateMarathonPreview()" />
+          </div>
+          <div id="ma-readiness-box" style="font-size:12px; margin-bottom:8px;"></div>
+          <div class="cmd-preview" id="ma-cmd-preview"></div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="enqueueMarathonJob()">&#10133; Queue Marathon Compilation</button>
+            <button class="btn" onclick="copyText('ma-cmd-preview')">Copy CLI</button>
+          </div>
+        </div>
+
+        <!-- Card 4: Direct Video Speed Converter -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">&#9193; 4. Fast Video Speed Converter (No Re-Render)</div>
+            <span class="badge badge-script">Fast FFmpeg</span>
+          </div>
+          <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:12px;">
+            Convert an already-rendered 1.0x chapter video to 1.25x or 1.5x without re-running TTS or camera segments.
+          </p>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Input MP4 Video Path</label>
+            <input type="text" id="sv-input"
+              placeholder="data/projects/nano_machine/chapter_001/renders/final_video.mp4"
+              oninput="updateSpeedVideoPreview()" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>New Speed Multiplier</label>
+              <select id="sv-speed" onchange="updateSpeedVideoPreview()">
+                <option value="1.25" selected>1.25x</option>
+                <option value="1.5">1.5x</option>
+                <option value="1.75">1.75x</option>
+                <option value="2.0">2.0x</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Output MP4 Path (Optional)</label>
+              <input type="text" id="sv-output" placeholder="Auto-named <stem>_1.25x.mp4"
+                oninput="updateSpeedVideoPreview()" />
+            </div>
+          </div>
+          <div class="cmd-preview" id="sv-cmd-preview"></div>
+          <button class="btn btn-primary" onclick="enqueueSpeedVideoJob()">&#10133; Queue Speed Conversion</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 3: MARATHON MOVIES -->
+    <section id="tab-marathons" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">&#127871; Compiled Marathon Movies (`exports/marathons/`)</div>
+          <button class="btn btn-sm" onclick="openWorkspaceFolder('exports/marathons')">&#128193; Open Marathons
+            Folder</button>
+        </div>
+        <div id="marathons-list-container"></div>
+      </div>
+    </section>
+
+    <!-- TAB 4: SCENE & THUMBNAIL STUDIO -->
+    <section id="tab-studio" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>Inspect Chapter:</span>
+            <select id="studio-series-select" style="width:240px;" onchange="populateStudioChapters()"></select>
+            <select id="studio-chapter-select" style="width:180px;" onchange="loadStudioChapter()"></select>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-cyan" onclick="regenerateChapterYoutubeKit()">&#128221; Re-build YouTube SEO
+              Kit</button>
+            <button class="btn btn-emerald" onclick="openCurrentChapterFolder()">&#128193; Open Chapter Folder</button>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Left: Thumbnail & Video Preview -->
+          <div>
+            <h3 style="font-size:14px; margin-bottom:10px;">Current Thumbnail &amp; Custom Generator</h3>
+            <div id="studio-thumb-preview"
+              style="margin-bottom:12px; background:#000; border-radius:8px; overflow:hidden; min-height:180px; display:flex; align-items:center; justify-content:center;">
+              <span style="color:var(--text-muted); font-size:13px;">Select a chapter to preview thumbnail</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Scene ID (e.g. scene_045)</label>
+                <input type="text" id="thumb-scene-id" placeholder="Click any scene card on the right..." />
+              </div>
+              <div class="form-group">
+                <label>Or Panel File (e.g. panel_045.webp)</label>
+                <input type="text" id="thumb-panel-file" placeholder="Optional override" />
+              </div>
+            </div>
+            <div class="checkbox-row">
+              <label class="checkbox-label">
+                <input type="checkbox" id="thumb-captions" /> Add Hindi Hook &amp; Chapter Badge Overlay
+              </label>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Custom Hindi Hook Text (when overlay enabled)</label>
+              <input type="text" id="thumb-hook-text" placeholder="800 साल पुराना शैतान जाग उठा!" />
+            </div>
+            <button class="btn btn-primary" onclick="generateCustomThumbnail()">&#127912; Generate Thumbnail from
+              Selected Scene</button>
+
+            <hr style="border:none; border-top:1px solid var(--border-color); margin:18px 0;" />
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <h3 style="font-size:14px;">YouTube Upload &amp; SEO Kit (`youtube_upload_kit.txt`)</h3>
+              <button class="btn btn-sm" onclick="copyText('studio-yt-kit-box')">Copy Kit</button>
+            </div>
+            <textarea id="studio-yt-kit-box" rows="10" readonly
+              placeholder="YouTube Titles, Description, Timestamps, and Tags will appear here..."></textarea>
+          </div>
+
+          <!-- Right: Interactive Scene & Panel Picker + Inline Dialogue Editor -->
+          <div>
+            <div
+              style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px; flex-wrap:wrap;">
+              <h3 style="font-size:14px;">Chapter Scenes &amp; Inline Hindi Dialogue Editor (<span
+                  id="studio-scene-count">0</span> scenes)</h3>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <button class="btn btn-sm btn-cyan" onclick="modernizeCurrentStudioChapter('rewrite')" title="Fast Gemini rewrite of this chapter's script into energetic Hinglish with English words">&#9889; Hinglish Rewrite</button>
+                <button class="btn btn-sm" onclick="modernizeCurrentStudioChapter('recreate')" title="Delete this script and re-create from panel images via Gemini Vision">&#128465; Delete &amp; Re-Create Script</button>
+                <button class="btn btn-sm btn-emerald" onclick="saveStudioManifestEdits()">&#128190; Save Script
+                  Edits</button>
+              </div>
+            </div>
+            <div class="scene-grid" id="studio-scene-grid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4.2: SOCIAL MEDIA & REELS STUDIO (YOUTUBE POSTS + INSTAGRAM REELS & CAROUSELS) -->
+    <section id="tab-social" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>&#128241; YouTube Community Post &amp; Instagram Reels / Carousel Studio:</span>
+            <select id="social-series-select" style="width:240px;" onchange="populateSocialChapters()"></select>
+            <select id="social-chapter-select" style="width:180px;" onchange="loadSocialPackForChapter()"></select>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="btn-gen-social" onclick="generateSocialPackNow(this)">&#128640; Generate YT Post + IG Carousel + 9:16 Reel</button>
+            <button class="btn btn-cyan" onclick="queueSocialPackJob()">&#10133; Queue in Background</button>
+            <button class="btn btn-emerald" onclick="openSocialPackFolder()">&#128193; Open Social Folder</button>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom:16px;">
+          <div class="form-group">
+            <label>9:16 Reel / Short Duration (sec)</label>
+            <input type="number" id="social-reel-dur" value="45" min="15" max="58" step="5" />
+          </div>
+          <div class="form-group">
+            <label>Custom Start Second in Chapter Video (Leave blank for AI Auto-Climax)</label>
+            <input type="number" id="social-reel-start" placeholder="Auto-detect climax window" min="0" step="1" />
+          </div>
+          <div class="form-group" style="display:flex; align-items:flex-end;">
+            <label class="checkbox-label" style="margin-bottom:8px;">
+              <input type="checkbox" id="social-overlays" checked /> Add Series Badge, Headline &amp; Swipe Overlays on Post Images
+            </label>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Left Column: Visual Previews (9:16 Reel Video + 1:1 YT Community Image + 4-Slide IG Carousel) -->
+          <div>
+            <h3 style="font-size:14px; color:var(--accent-cyan); margin-bottom:10px;">&#127916; 1. Instagram Reel / YouTube Short (`1080x1920` 9:16 Vertical Video)</h3>
+            <div id="social-reel-box" class="stat-box" style="margin-bottom:16px; text-align:center; min-height:220px; display:flex; align-items:center; justify-content:center;">
+              <span style="color:var(--text-muted); font-size:13px;">Click "Generate YT Post + IG Carousel + 9:16 Reel" to extract the climax 9:16 video</span>
+            </div>
+
+            <h3 style="font-size:14px; color:var(--accent-emerald); margin-bottom:10px;">&#128248; 2. YouTube Community Post (`1080x1080` 1:1) &amp; Instagram 4-Slide Carousel (`1080x1350` 4:5)</h3>
+            <div id="social-images-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(175px, 1fr)); gap:12px;">
+              <div class="stat-box" style="color:var(--text-muted); font-size:12.5px; grid-column:1/-1; text-align:center;">
+                No social images generated for this chapter yet.
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Ready-to-Paste Copy (YouTube Community Post + Poll, IG Caption + Hashtags, Shorts Title) -->
+          <div>
+            <div class="stat-box" style="margin-bottom:14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong style="font-size:13px; color:var(--accent-amber);">&#128226; YouTube Community Post + Interactive Poll Options</strong>
+                <button class="btn btn-sm" onclick="copyText('social-yt-post-box')">Copy YT Post</button>
+              </div>
+              <textarea id="social-yt-post-box" rows="8" placeholder="YouTube Community Post teaser text & 4 poll options will appear here..."></textarea>
+            </div>
+
+            <div class="stat-box" style="margin-bottom:14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong style="font-size:13px; color:#f472b6;">&#128247; Instagram Reel &amp; 4-Slide Carousel Caption + 20 Hashtags</strong>
+                <button class="btn btn-sm" onclick="copyText('social-ig-caption-box')">Copy IG Caption</button>
+              </div>
+              <textarea id="social-ig-caption-box" rows="7" placeholder="Instagram Reels & Carousel caption with hashtags will appear here..."></textarea>
+            </div>
+
+            <div class="stat-box">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong style="font-size:13px; color:var(--accent-cyan);">&#9889; YouTube Shorts / Instagram Reel Title</strong>
+                <button class="btn btn-sm" onclick="copyText('social-reel-title-box')">Copy Title</button>
+              </div>
+              <input type="text" id="social-reel-title-box" placeholder="High-CTR Shorts / Reels title..." />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instagram Full-Episode & Marathon Compatibility (9:16 Exporter) -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-header">
+          <div class="card-title">&#128247; Instagram Video Compatibility Exporter (`1080x1920` 9:16 + Auto-Split + Publishing Guide)</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="queueInstagramExportJob()">&#128640; Queue Instagram 9:16 Export</button>
+            <button class="btn btn-emerald" onclick="openWorkspaceFolder('exports/instagram')">&#128193; Open Instagram Exports</button>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="form-group">
+            <label>Source Mode</label>
+            <select id="ig-source-mode" onchange="toggleIgSourceMode()">
+              <option value="chapters">Rendered Chapter Range (1080x1920 Episodes)</option>
+              <option value="marathon">Split Compiled Marathon Movie</option>
+            </select>
+          </div>
+          <div class="form-group" id="ig-series-group">
+            <label>Series</label>
+            <select id="ig-series-select"></select>
+          </div>
+          <div class="form-group" id="ig-ch-start-group">
+            <label>Ch Start</label>
+            <input type="number" id="ig-ch-start" value="1" min="1" />
+          </div>
+          <div class="form-group" id="ig-ch-end-group">
+            <label>Ch End</label>
+            <input type="number" id="ig-ch-end" value="5" min="1" />
+          </div>
+          <div class="form-group" id="ig-speed-group">
+            <label>Render Speed</label>
+            <select id="ig-speed">
+              <option value="1.25">1.25x (Default)</option>
+              <option value="1.0">1.0x</option>
+              <option value="1.5">1.5x</option>
+            </select>
+          </div>
+          <div class="form-group" id="ig-marathon-group" style="display:none; grid-column:span 2;">
+            <label>Select Compiled Marathon Movie</label>
+            <select id="ig-marathon-select"></select>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom:16px;">
+          <div class="form-group">
+            <label>Max Part Duration (Instagram Limit)</label>
+            <select id="ig-max-minutes">
+              <option value="18">18 min (Full Episode — under IG 20m cap)</option>
+              <option value="2.75">2.75 min (Best for Reels Explore Reach &le;3m)</option>
+              <option value="15">15 min (Safe Upload Parts)</option>
+              <option value="0">No Split (Keep original length)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Target Aspect Ratio</label>
+            <select id="ig-aspect">
+              <option value="9x16">9:16 Vertical (1080x1920 Full Screen Reels)</option>
+              <option value="16x9">16:9 Horizontal (Keep Widescreen)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Your Instagram @Handle (for Guide CTAs)</label>
+            <input type="text" id="ig-handle-input" placeholder="e.g. @manhwahindidub" oninput="saveSocialHandlesLocal()" />
+          </div>
+          <div class="form-group">
+            <label>Your YouTube Channel Link / @Handle</label>
+            <input type="text" id="ig-yt-input" placeholder="e.g. https://youtube.com/@YourChannel" oninput="saveSocialHandlesLocal()" />
+          </div>
+        </div>
+
+        <div id="ig-exports-container">
+          <div class="stat-box" style="color:var(--text-muted); font-size:12.5px; text-align:center;">
+            No Instagram exports in <code>exports/instagram/</code> yet. Queue an export above!
+          </div>
+        </div>
+      </div>
+
+      <!-- Instagram Auto-Publish (Official Graph API) -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-header">
+          <div class="card-title">&#128228; Instagram Reels Auto-Publisher (Official Graph API)</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span id="ig-auth-badge" class="badge" style="font-size:11px;">Checking IG Graph API...</span>
+            <button class="btn btn-sm btn-cyan" onclick="previewInstagramPublish()">&#128065; Preview Reels</button>
+            <button class="btn btn-sm btn-primary" onclick="queueInstagramPublish()">&#128640; Auto-Publish Reels</button>
+          </div>
+        </div>
+        <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">
+          Automatically posts un-published <code>9:16</code> parts from <code>exports/instagram/</code> with captions &amp; hashtags from <code>INSTAGRAM_PUBLISHING_GUIDE.md</code> via Meta Graph API + temporary <code>cloudflared</code> HTTPS tunnel.
+        </p>
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom:14px;">
+          <div class="form-group">
+            <label>Instagram Export Folder</label>
+            <select id="ig-publish-folder"></select>
+          </div>
+          <div class="form-group">
+            <label>Reels Count (next un-published)</label>
+            <input type="number" id="ig-publish-count" value="2" min="1" max="10" />
+          </div>
+          <div class="form-group">
+            <label>Delay Between Posts (minutes)</label>
+            <input type="number" id="ig-publish-delay" value="0" min="0" step="15" />
+          </div>
+        </div>
+        <div id="ig-publish-preview-container" style="font-size:12.5px; color:var(--text-muted);">
+          Select an export folder and click <strong>Preview Reels</strong> to inspect captions &amp; pending parts.
+        </div>
+      </div>
+
+      <!-- YouTube Batch Upload & Staggered Scheduler -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-header">
+          <div class="card-title">&#128250; YouTube Batch Upload &amp; Staggered Scheduler (2–3+ Chapters)</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span id="yt-auth-badge" class="badge" style="font-size:11px;">Checking YouTube OAuth...</span>
+            <button class="btn btn-sm btn-cyan" onclick="previewYouTubeBatch()">&#128065; Preview Schedule</button>
+            <button class="btn btn-sm btn-primary" onclick="queueYouTubeBatchUpload()">&#128640; Upload &amp; Schedule Batch</button>
+          </div>
+        </div>
+        <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">
+          Automatically picks 2–3+ rendered chapters, extracts/generates high-CTR Title, Description, Timeline Timestamps, Hashtags &amp; Thumbnail, and schedules them across different time periods (e.g. 10:00 AM, 4:00 PM, 9:00 PM).
+        </p>
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom:14px;">
+          <div class="form-group">
+            <label>Series</label>
+            <select id="yt-batch-series"></select>
+          </div>
+          <div class="form-group">
+            <label>Chapters (optional, e.g. 1-3 or 4,5,6)</label>
+            <input type="text" id="yt-batch-chapters" placeholder="Auto-pick next un-uploaded" />
+          </div>
+          <div class="form-group">
+            <label>Auto-Pick Count</label>
+            <input type="number" id="yt-batch-count" value="3" min="1" max="15" />
+          </div>
+          <div class="form-group">
+            <label>Source Speed</label>
+            <select id="yt-batch-speed">
+              <option value="1.25" selected>1.25x (Recommended)</option>
+              <option value="1.0">1.0x</option>
+              <option value="1.5">1.5x</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Daily Time Slots (24h HH:MM)</label>
+            <input type="text" id="yt-batch-slots" value="10:00,16:00,21:00" />
+          </div>
+          <div class="form-group">
+            <label>Or Interval Hours (optional)</label>
+            <input type="number" id="yt-batch-interval" placeholder="e.g. 6 (overrides slots)" step="0.5" min="0.5" />
+          </div>
+          <div class="form-group">
+            <label>Start Date/Time (optional)</label>
+            <input type="text" id="yt-batch-start" placeholder="YYYY-MM-DD HH:MM" />
+          </div>
+          <div class="form-group">
+            <label>Playlist ID (optional)</label>
+            <input type="text" id="yt-batch-playlist" placeholder="PL..." />
+          </div>
+        </div>
+        <div id="yt-batch-preview-container" style="font-size:12.5px; color:var(--text-muted);">
+          Click <strong>Preview Schedule</strong> to inspect titles, timestamps, hashtags, and publish times before uploading.
+        </div>
+      </div>
+
+      <!-- YouTube Shorts Batch Upload & Staggered Scheduler -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-header">
+          <div class="card-title">&#9889; YouTube Shorts Batch Upload &amp; Staggered Scheduler (9:16 Vertical)</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn btn-sm btn-cyan" onclick="previewYouTubeShortsBatch()">&#128065; Preview Shorts Schedule</button>
+            <button class="btn btn-sm btn-primary" onclick="queueYouTubeShortsBatchUpload()">&#128640; Upload &amp; Schedule Shorts</button>
+          </div>
+        </div>
+        <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">
+          Picks 2–3+ vertical <code>9:16</code> chapter Shorts (<code>*_short_9x16.mp4</code> / Reels), adds <code>#Shorts</code> SEO title, description &amp; hashtags, and schedules them at different time periods.
+        </p>
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom:14px;">
+          <div class="form-group">
+            <label>Series</label>
+            <select id="yt-shorts-series"></select>
+          </div>
+          <div class="form-group">
+            <label>Chapters (optional, e.g. 1-3)</label>
+            <input type="text" id="yt-shorts-chapters" placeholder="Auto-pick next un-uploaded" />
+          </div>
+          <div class="form-group">
+            <label>Auto-Pick Count</label>
+            <input type="number" id="yt-shorts-count" value="3" min="1" max="15" />
+          </div>
+          <div class="form-group">
+            <label>Short Duration (sec, 15–175)</label>
+            <input type="number" id="yt-shorts-duration" value="90" min="15" max="175" step="5" />
+          </div>
+          <div class="form-group">
+            <label>Daily Time Slots (24h HH:MM)</label>
+            <input type="text" id="yt-shorts-slots" value="12:00,18:00,22:00" />
+          </div>
+          <div class="form-group">
+            <label>Or Interval Hours (optional)</label>
+            <input type="number" id="yt-shorts-interval" placeholder="e.g. 4 (overrides slots)" step="0.5" min="0.5" />
+          </div>
+          <div class="form-group">
+            <label>Start Date/Time (optional)</label>
+            <input type="text" id="yt-shorts-start" placeholder="YYYY-MM-DD HH:MM" />
+          </div>
+          <div class="form-group">
+            <label>Playlist ID (optional)</label>
+            <input type="text" id="yt-shorts-playlist" placeholder="PL..." />
+          </div>
+        </div>
+        <div id="yt-shorts-preview-container" style="font-size:12.5px; color:var(--text-muted);">
+          Click <strong>Preview Shorts Schedule</strong> to inspect <code>#Shorts</code> titles, hashtags, and publish times before uploading.
+        </div>
+
+        <details style="margin-top:12px;">
+          <summary style="cursor:pointer; font-size:12.5px; color:var(--accent-cyan);">
+            &#128203; Uploaded &amp; Scheduled History (Duplicate Protection Log)
+          </summary>
+          <div id="yt-history-container" style="margin-top:8px; font-size:12px; color:var(--text-muted);">
+            Loading upload history...
+          </div>
+        </details>
+      </div>
+
+      <!-- YouTube Marathon Movie Uploader -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-header">
+          <div class="card-title">&#127871; YouTube Marathon Movie Uploader (Compiled Full Movies)</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn btn-sm btn-cyan" onclick="previewYouTubeMarathon()">&#128065; Preview Marathon</button>
+            <button class="btn btn-sm btn-primary" onclick="queueYouTubeMarathonUpload()">&#128640; Upload &amp; Schedule Marathon</button>
+          </div>
+        </div>
+        <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">
+          Select any compiled Marathon Movie from <code>exports/marathons/</code>. Automatically reads its <code>.timestamps.txt</code>, builds a viral Marathon Title, SEO Description, Clickable Chapter Timeline, Hashtags &amp; Tags, and schedules it on YouTube.
+        </p>
+        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom:14px;">
+          <div class="form-group" style="grid-column: span 2;">
+            <label>Select Compiled Marathon Movie</label>
+            <select id="yt-marathon-select"></select>
+          </div>
+          <div class="form-group">
+            <label>Publish Date/Time (optional, local)</label>
+            <input type="text" id="yt-marathon-publish-at" placeholder="YYYY-MM-DD HH:MM (default 18:00)" />
+          </div>
+          <div class="form-group">
+            <label>Playlist ID (optional)</label>
+            <input type="text" id="yt-marathon-playlist" placeholder="PL..." />
+          </div>
+        </div>
+        <div id="yt-marathon-preview-container" style="font-size:12.5px; color:var(--text-muted);">
+          Select a Marathon Movie and click <strong>Preview Marathon</strong> to inspect its title, timeline, hashtags, and publish time.
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4.5: VOICE CAST & SERIES PROFILES -->
+    <section id="tab-voices" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>&#127897; Series Voice Cast &amp; Audio Profile Editor:</span>
+            <select id="voice-profile-select" style="width:260px;" onchange="loadSelectedVoiceProfile()"></select>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-sm btn-emerald" onclick="openNewSeriesModal()">&#10133; New Manhwa Series</button>
+            <button class="btn btn-sm btn-cyan" onclick="autoCastCurrentProfileVoices(this)" title="Auto-populate distinct Indian Human Voices + Gemini AI character names for this series">&#10024; Auto-Cast / Upgrade Voices</button>
+            <button class="btn btn-sm" onclick="addCharacterVoiceRow()">&#10133; Add Character Voice</button>
+            <button class="btn btn-sm btn-amber" onclick="applyVoiceToAllSeries()" title="Apply this Main Narrator Voice, Rate, Pitch & BGM volume to ALL Manhwa Series at once">&#127760; Apply to ALL Series</button>
+            <button class="btn btn-primary" onclick="saveCurrentVoiceProfile()">&#128190; Save Series Profile</button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Series Display Name</label>
+            <input type="text" id="vp-series-name" />
+          </div>
+          <div class="form-group">
+            <label>Genre Preset</label>
+            <select id="vp-genre">
+              <option value="murim">murim (Martial Arts / Demonic Cult)</option>
+              <option value="system_hunter">system_hunter (RPG / Dungeon)</option>
+              <option value="fantasy_comedy">fantasy_comedy (Estate Developer style)</option>
+              <option value="dark_fantasy">dark_fantasy (Gothic / Revenge)</option>
+              <option value="romance_isekai">romance_isekai (Otome / Noble)</option>
+              <option value="urban_fantasy_romance">urban_fantasy_romance</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>BGM Speech Ducking Volume (0.05 – 0.40)</label>
+            <input type="number" id="vp-bgm-duck" step="0.02" min="0.02" max="0.80" value="0.12" />
+          </div>
+          <div class="form-group">
+            <label>BGM Normal Volume (0.15 – 0.80)</label>
+            <input type="number" id="vp-bgm-norm" step="0.05" min="0.05" max="1.0" value="0.35" />
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom:16px;">
+          <div class="form-group">
+            <label>Main Narrator Neural Voice ID</label>
+            <select id="vp-narrator-voice">
+              <option value="gemini:Puck" selected>&#127470;&#127475;&#10024; Gemini Indian Human: Puck (Young Expressive Indian Male LLM)</option>
+              <option value="gemini:Charon">&#127470;&#127475;&#10024; Gemini Indian Human: Charon (Deep Storyteller Indian Male LLM)</option>
+              <option value="hi-IN-MadhurNeural">&#127470;&#127475; Indian Human: MadhurNeural (Warm Hindi Storyteller Male - Natural +0Hz)</option>
+              <option value="mr-IN-ManoharNeural">&#127470;&#127475; Indian Human: ManoharNeural (Young 20yo Indian Hero Male - Devanagari/Hinglish)</option>
+              <option value="en-IN-PrabhatNeural">&#127470;&#127475; Indian Human: PrabhatNeural (Modern Urban Indian Hinglish Male)</option>
+              <option value="ne-NP-SagarNeural">&#127470;&#127475; Indian/Devanagari Human: SagarNeural (Deep Swordsman / Lord Male)</option>
+              <option value="hi-IN-SwaraNeural">&#127470;&#127475; Indian Human: SwaraNeural (Attractive Hindi Female / System AI)</option>
+              <option value="mr-IN-AarohiNeural">&#127470;&#127475; Indian Human: AarohiNeural (Sweet Young Indian Heroine Female)</option>
+              <option value="en-IN-NeerjaNeural">&#127470;&#127475; Indian Human: NeerjaNeural (Sleek Modern Indian Hinglish Female)</option>
+              <option value="gemini:Fenrir">&#127470;&#127475;&#10024; Gemini Indian Human: Fenrir (Intense Action Indian Male LLM)</option>
+              <option value="gemini:Kore">&#127470;&#127475;&#10024; Gemini Indian Human: Kore (Warm Indian Female LLM)</option>
+              <option value="gemini:Aoede">&#127470;&#127475;&#10024; Gemini Indian Human: Aoede (Expressive Heroine Female LLM)</option>
+              <option value="en-US-AndrewMultilingualNeural">&#127757; Global Human V2: AndrewMultilingual (Storyteller Male)</option>
+              <option value="en-US-BrianMultilingualNeural">&#127757; Global Human V2: BrianMultilingual (Young Hero Male)</option>
+              <option value="en-US-AvaMultilingualNeural">&#127757; Global Human V2: AvaMultilingual (Natural Female)</option>
+              <option value="en-US-EmmaMultilingualNeural">&#127757; Global Human V2: EmmaMultilingual (Young Heroine Female)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Narrator Rate (e.g. +2% or +4%)</label>
+            <input type="text" id="vp-narrator-rate" value="+2%" />
+          </div>
+          <div class="form-group">
+            <label>Narrator Pitch (+0Hz = 100% Natural Human)</label>
+            <input type="text" id="vp-narrator-pitch" value="+0Hz" />
+          </div>
+          <div class="form-group" style="display:flex; align-items:flex-end;">
+            <button class="btn btn-cyan" style="width:100%; justify-content:center;" onclick="previewNarratorVoice()">&#128266; Test Narrator Voice</button>
+          </div>
+        </div>
+
+        <!-- Live Voice Test Bench & Audio Player -->
+        <div class="stat-box" style="margin-bottom:16px; border-color:rgba(6, 182, 212, 0.35);">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+            <strong style="font-size:13px; color:var(--accent-cyan);">&#127911; Live Voice Audition &amp; Sample Text</strong>
+            <span id="vp-preview-status" style="font-size:12px; color:var(--text-secondary);">Click any "&#128266; Hear" button to synthesize &amp; listen with full Studio EQ Mastering</span>
+          </div>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <input type="text" id="vp-sample-text" style="flex:1; min-width:280px;" placeholder="Optional custom Hindi test line (leave blank for automatic role-matched Hindi line)..." />
+            <audio id="vp-audio-player" controls style="height:36px; min-width:280px;"></audio>
+          </div>
+        </div>
+
+        <h3 style="font-size:14px; margin-bottom:10px;">Character-Specific Voice Roster</h3>
+        <div class="table-wrap">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th>Character Name / Role</th>
+                <th>Neural Voice ID</th>
+                <th>Speech Rate</th>
+                <th>Pitch</th>
+                <th>Description / Notes</th>
+                <th>Hear Voice</th>
+                <th>Remove</th>
+              </tr>
+            </thead>
+            <tbody id="vp-characters-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4.8: DYNAMIC .ENV STUDIO SETTINGS -->
+    <section id="tab-env" class="tab-panel">
+      <!-- Gemini API Keys & Live TTS Checker Card -->
+      <div class="card" style="border-color: rgba(6, 182, 212, 0.35);">
+        <div class="card-header">
+          <div>
+            <div class="card-title">&#128273; Gemini API Keys &amp; Live TTS Support Checker</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:3px;">
+              Verify whether your saved <code>.env</code> keys—or brand-new <code>AQ.</code> / <code>AIza</code> keys before inserting into <code>.env</code>—support <strong>Gemini 2.5 Puck TTS</strong> and <strong>Script LLM</strong>.
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-sm" onclick="loadGeminiKeysList()">&#x21bb; Reload Keys</button>
+            <button class="btn btn-cyan" id="btn-test-all-keys" onclick="checkAllEnvGeminiKeys()">&#128640; Test All .env Keys (TTS + Script)</button>
+          </div>
+        </div>
+
+        <!-- Pre-check & Add New Keys Before Saving to .env -->
+        <div class="stat-box" style="margin-bottom:14px; border-color: rgba(16, 185, 129, 0.3);">
+          <div class="form-group" style="margin-bottom:10px;">
+            <label>Paste New Gemini Key(s) to Test <strong>Before</strong> Adding to <code>.env</code> (single or comma/newline-separated)</label>
+            <input type="text" id="gk-new-keys-input" placeholder="Paste AQ.Ab8... or AIzaSy... key(s) here..." />
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button class="btn btn-cyan btn-sm" id="btn-test-new-keys" onclick="checkNewGeminiKeys()">&#129514; Test Key(s) Before Saving</button>
+            <button class="btn btn-emerald btn-sm" id="btn-add-new-keys" onclick="addNewGeminiKeysToEnv()">&#10133; Add Key(s) to .env</button>
+            <span id="gk-new-status" style="font-size:12px; color:var(--text-secondary);"></span>
+          </div>
+          <div id="gk-precheck-box" style="display:none; margin-top:12px;">
+            <div class="table-wrap">
+              <table class="matrix-table">
+                <thead>
+                  <tr>
+                    <th>New Key (Masked)</th>
+                    <th>Format</th>
+                    <th>Gemini 2.5 Puck TTS</th>
+                    <th>Script LLM (3.5 Flash-Lite)</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="gk-precheck-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary & Configured .env Keys Table -->
+        <div id="gk-summary-bar" style="font-size:12.5px; color:var(--accent-cyan); margin-bottom:10px; font-weight:600;">
+          Loading keys from .env...
+        </div>
+        <div class="table-wrap">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Key in <code>.env</code> (Masked)</th>
+                <th>Key Type</th>
+                <th>Gemini 2.5 Puck TTS Status</th>
+                <th>Script LLM (3.5 Flash-Lite)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="gk-keys-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">&#128295; Dynamic `.env` Studio Runtime Settings (Zero Hardcoded Values)</div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm" onclick="loadStudioEnvConfig()">&#x21bb; Reload from `.env`</button>
+            <button class="btn btn-primary" onclick="saveStudioEnvConfig()">&#128190; Save Settings to `.env`</button>
+          </div>
+        </div>
+        <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:16px;">
+          Changes saved here are written directly to your root <code>.env</code> file and take effect immediately for all new jobs.
+        </p>
+
+        <div class="grid-2">
+          <!-- Group 1: AI & Screenplay Settings -->
+          <div class="stat-box">
+            <h3 style="font-size:14px; color:var(--accent-cyan); margin-bottom:12px;">&#129302; 1. AI &amp; Screenplay Settings</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Default Series (`STUDIO_DEFAULT_SERIES`)</label>
+                <input type="text" id="env-default-series" />
+              </div>
+              <div class="form-group">
+                <label>LLM Provider (`LLM_PROVIDER`)</label>
+                <select id="env-llm-provider">
+                  <option value="gemini">gemini (Google Gemini API)</option>
+                  <option value="ollama">ollama (Local Offline Vision)</option>
+                  <option value="openai">openai (OpenAI GPT-4o)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Candidate Gemini Models (`STUDIO_GEMINI_MODELS`, comma-separated)</label>
+              <input type="text" id="env-gemini-models" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Panels Per Batch (`STUDIO_LLM_BATCH_SIZE`)</label>
+                <input type="number" id="env-batch-size" min="2" max="20" />
+              </div>
+              <div class="form-group">
+                <label>Vision Thumb Size px (`STUDIO_VISION_THUMB_SIZE`)</label>
+                <input type="number" id="env-thumb-size" min="256" max="1536" step="64" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Batch Pacing Delay sec (`STUDIO_BATCH_DELAY_SEC`)</label>
+                <input type="number" id="env-batch-delay" step="0.5" min="0" />
+              </div>
+              <div class="form-group">
+                <label>429 Cooldown sec (`STUDIO_RATE_LIMIT_COOLDOWN_SEC`)</label>
+                <input type="number" id="env-cooldown-sec" step="5" min="5" />
+              </div>
+              <div class="form-group">
+                <label>Max Retries (`STUDIO_MAX_BATCH_ATTEMPTS`)</label>
+                <input type="number" id="env-max-attempts" min="1" max="10" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 2: Video Rendering & GPU -->
+          <div class="stat-box">
+            <h3 style="font-size:14px; color:var(--accent-emerald); margin-bottom:12px;">&#127916; 2. Video Rendering &amp; GPU Acceleration</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Pro Video Width (`STUDIO_PRO_WIDTH`)</label>
+                <input type="number" id="env-pro-width" step="10" />
+              </div>
+              <div class="form-group">
+                <label>Pro Video Height (`STUDIO_PRO_HEIGHT`)</label>
+                <input type="number" id="env-pro-height" step="10" />
+              </div>
+              <div class="form-group">
+                <label>Frame Rate FPS (`STUDIO_PRO_FPS`)</label>
+                <input type="number" id="env-pro-fps" min="15" max="60" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Video Quality CQ/CRF (`STUDIO_VIDEO_QUALITY`, 16=Best, 23=Fast)</label>
+                <input type="number" id="env-video-quality" min="14" max="30" />
+              </div>
+              <div class="form-group">
+                <label>Default Playback Speed (`STUDIO_DEFAULT_SPEED`)</label>
+                <input type="number" id="env-default-speed" step="0.05" min="0.5" max="3.0" />
+              </div>
+            </div>
+            <div class="checkbox-row">
+              <label class="checkbox-label">
+                <input type="checkbox" id="env-auto-clean" /> Auto-delete temp segments after Pro Render (`STUDIO_AUTO_CLEAN_SEGMENTS=1`)
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="env-disable-gpu" /> Force CPU Encoding (`STUDIO_DISABLE_GPU=1`)
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="env-ambient-aura" /> Ambient Mood Aura Tint (`STUDIO_ENABLE_AMBIENT_AURA=1`)
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="env-microfade" /> Smooth Scene Micro-Fade (`STUDIO_ENABLE_SCENE_MICROFADE=1`)
+              </label>
+            </div>
+          </div>
+
+          <!-- Group 3: Voice Timing & Mastering -->
+          <div class="stat-box">
+            <h3 style="font-size:14px; color:var(--accent-amber); margin-bottom:12px;">&#127897; 3. Voice Pacing, SFX &amp; Audio Mastering</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Min Scene Duration sec (`STUDIO_MIN_SCENE_SEC`)</label>
+                <input type="number" id="env-min-scene-sec" step="0.1" min="1.0" />
+              </div>
+              <div class="form-group">
+                <label>Scene Breathing Buffer sec (`STUDIO_SCENE_BUFFER_SEC`)</label>
+                <input type="number" id="env-scene-buffer-sec" step="0.05" min="0.0" />
+              </div>
+              <div class="form-group">
+                <label>Broadcast Loudness LUFS (`STUDIO_TARGET_LUFS`)</label>
+                <input type="number" id="env-target-lufs" step="0.5" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Default BGM Track (`STUDIO_DEFAULT_BGM`)</label>
+                <input type="text" id="env-default-bgm" />
+              </div>
+              <div class="form-group">
+                <label>Combat/Aura SFX Volume (`STUDIO_SFX_VOLUME`)</label>
+                <input type="number" id="env-sfx-vol" step="0.05" min="0.05" max="1.0" value="0.28" />
+              </div>
+            </div>
+            <div class="checkbox-row">
+              <label class="checkbox-label">
+                <input type="checkbox" id="env-enable-sfx" /> Enable Combat &amp; System SFX Cues (`STUDIO_ENABLE_SFX=1`)
+              </label>
+            </div>
+          </div>
+
+          <!-- Group 4: Marathon & Fonts -->
+          <div class="stat-box">
+            <h3 style="font-size:14px; color:#c4b5fd; margin-bottom:12px;">&#127871; 4. Marathon Bumpers &amp; Typography</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Chapter Bumper Duration sec (`STUDIO_BUMPER_DURATION_SEC`)</label>
+                <input type="number" id="env-bumper-dur" step="0.5" min="0.5" max="10.0" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Latin Title Font Path (`STUDIO_FONT_LATIN`)</label>
+                <input type="text" id="env-font-latin" />
+              </div>
+              <div class="form-group">
+                <label>Devanagari Hindi Font Path (`STUDIO_FONT_HINDI`)</label>
+                <input type="text" id="env-font-hindi" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: JOB QUEUE & LIVE CONSOLE -->
+    <section id="tab-queue" class="tab-panel">
+      <div class="grid-2">
+        <!-- Left: Queue List -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">&#9881; Managed Job Queue</div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-sm" id="btn-pause-queue" onclick="togglePauseQueue()">Pause Queue</button>
+              <button class="btn btn-sm" onclick="clearFinishedJobs()">Clear Finished</button>
+            </div>
+          </div>
+          <div id="queue-jobs-list"></div>
+        </div>
+
+        <!-- Right: Live Log Console -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">&#128187; Live Job Output Console <span id="console-job-title"
+                style="color:var(--accent-cyan); font-weight:400;"></span></div>
+            <button class="btn btn-sm" onclick="scrollConsoleBottom()">Scroll to Bottom</button>
+          </div>
+          <div class="console-box" id="job-console-box">Select a running or completed job on the left to inspect its
+            live terminal output...</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Video Preview Modal -->
+  <div class="modal-backdrop" id="video-modal" onclick="if(event.target===this) closeVideoModal()">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title" id="modal-video-title">Video Preview</div>
+        <button class="btn btn-sm" onclick="closeVideoModal()">&#10005; Close</button>
+      </div>
+      <video id="modal-video-player" controls
+        style="width:100%; max-height:72vh; background:#000; border-radius:8px;"></video>
+    </div>
+  </div>
+
+  <!-- Onboard New Manhwa Series Modal -->
+  <div class="modal-backdrop" id="new-series-modal" onclick="if(event.target===this) closeNewSeriesModal()">
+    <div class="modal-content" style="max-width:600px;">
+      <div class="card-header">
+        <div class="card-title">&#10133; Onboard New Manhwa Series</div>
+        <button class="btn btn-sm" onclick="closeNewSeriesModal()">&#10005; Close</button>
+      </div>
+      <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
+        Creates the <code>assets/inbox/&lt;Series Name&gt;/</code> folder where you can drop chapter folders or <code>.zip</code> files, and automatically sets up a 5-Voice Character Roster (plus optional Gemini AI character discovery).
+      </p>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>Manhwa Series Name</label>
+        <input type="text" id="ns-name" placeholder="e.g. Solo Leveling, Return of the Mount Hua Sect, Absolute Sword Sense" />
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>Genre &amp; Audio Preset</label>
+        <select id="ns-genre">
+          <option value="murim">murim (Martial Arts / Demonic Cult / Swordsmanship)</option>
+          <option value="system_hunter">system_hunter (System / Dungeon / Hunter / Leveling)</option>
+          <option value="dark_fantasy">dark_fantasy (Revenge / Gothic / Ruthless Overlord)</option>
+          <option value="fantasy_comedy">fantasy_comedy (Isekai / Kingdom Building / Comedy)</option>
+        </select>
+      </div>
+      <div class="checkbox-row" style="margin-bottom:16px;">
+        <label class="checkbox-label">
+          <input type="checkbox" id="ns-ai-cast" checked /> &#10024; Use Gemini AI to discover main character names &amp; auto-assign distinct voices
+        </label>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn" onclick="closeNewSeriesModal()">Cancel</button>
+        <button class="btn btn-primary" id="btn-create-series" onclick="submitNewSeriesOnboard()">&#128640; Create Inbox &amp; Voice Cast</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="/app.js"></script>
+</body>
+
+</html>
