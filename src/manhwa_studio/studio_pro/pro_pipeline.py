@@ -126,21 +126,40 @@ class ProPipeline:
         v_enc_args = get_video_encoder_args(quality=self.env_cfg.video_quality, cpu_preset="veryfast", nvenc_preset="p4")
         enc_label = "GPU (h264_nvenc)" if is_nvenc_available() else "CPU (libx264)"
 
-        # Invalidate cached visual segments if panel_layout changed (e.g. classic -> hybrid)
-        layout_marker = segments_dir / f".panel_layout_{panel_layout}"
-        if not layout_marker.exists():
-            for old_seg in segments_dir.glob("seg_*.mp4"):
-                try:
-                    old_seg.unlink()
-                except Exception:
-                    pass
-            for old_m in segments_dir.glob(".panel_layout_*"):
-                try:
-                    old_m.unlink()
-                except Exception:
-                    pass
+        import hashlib
+        import json as _json
+        from manhwa_studio.studio_pro.audio_director import AudioDirector
+
+        ffmpeg_bin = AudioDirector._resolve_media_tool("ffmpeg")
+
+        def _probe_seg_dur(seg_path: Path, fallback: float) -> float:
+            return AudioDirector._probe_audio_duration(seg_path, fallback, stream_selector="v:0")
+
+        # Invalidate cached visual segments if layout, resolution, fps, panels, or scene durations changed
+        sig_payload = _json.dumps(
+            {
+                "layout": panel_layout,
+                "fps": fps,
+                "tw": tw,
+                "th": th,
+                "scenes": [
+                    (sc.scene_id, sc.image_file, round(float(sc.actual_audio_duration or sc.duration), 4))
+                    for sc in manifest.scenes
+                ],
+            },
+            sort_keys=True,
+        ).encode("utf-8")
+        render_sig = hashlib.sha1(sig_payload).hexdigest()[:12]
+        sig_marker = segments_dir / f".render_sig_{render_sig}"
+        if not sig_marker.exists():
+            for pattern in ("seg_*.mp4", ".render_sig_*", ".panel_layout_*"):
+                for old_item in segments_dir.glob(pattern):
+                    try:
+                        old_item.unlink()
+                    except Exception:
+                        pass
             try:
-                layout_marker.write_text(panel_layout, encoding="utf-8")
+                sig_marker.write_text(render_sig, encoding="utf-8")
             except Exception:
                 pass
 
@@ -163,16 +182,26 @@ class ProPipeline:
         )
 
         prev_valid_panel = None
+        audio_cursor = 0.0
+        video_cursor = 0.0
         for idx, scene in enumerate(manifest.scenes):
+            sc_audio_dur = float(scene.actual_audio_duration or scene.duration)
             panel_info = prepared_panels[idx]
             if panel_info is None:
-                logger.warning(f"Image missing for scene {scene.scene_id}: {scene.image_file}")
-                continue
+                if prev_valid_panel is not None:
+                    logger.warning(f"Image missing for scene {scene.scene_id}: {scene.image_file}; reusing previous panel to preserve A/V sync")
+                    panel_info = prev_valid_panel
+                else:
+                    logger.warning(f"Image missing for scene {scene.scene_id}: {scene.image_file}")
+                    audio_cursor += sc_audio_dur
+                    continue
 
             clean_p, size, focus = panel_info
             img_path = self.pm.artwork_dir / scene.image_file
+            fallback_src = img_path if img_path.exists() else clean_p
             seg_file = segments_dir / f"seg_{idx:03d}_{scene.scene_id}.mp4"
-            dur = scene.actual_audio_duration or scene.duration
+            audio_cursor += sc_audio_dur
+            dur = max(0.20, audio_cursor - video_cursor)
 
             should_render = force_rebuild_segments or not (seg_file.exists() and seg_file.stat().st_size > 10000)
 
@@ -203,10 +232,10 @@ class ProPipeline:
                         scene, l_sz, l_fc, r_sz, r_fc, dur, active_side=active_side, fps=fps
                     )
                     cmd = [
-                        "ffmpeg", "-y",
+                        ffmpeg_bin, "-y",
                         "-loop", "1", "-i", str(l_p),
                         "-loop", "1", "-i", str(r_p),
-                        "-t", f"{dur:.3f}",
+                        "-t", f"{dur:.4f}",
                         "-filter_complex", fc_graph,
                         "-map", "[v_out]",
                         *v_enc_args,
@@ -216,9 +245,9 @@ class ProPipeline:
                 elif panel_layout == "classic":
                     vf_filter = self.camera_director.build_ffmpeg_filter(scene, dur, fps=fps)
                     cmd = [
-                        "ffmpeg", "-y",
-                        "-loop", "1", "-i", str(img_path),
-                        "-t", f"{dur:.3f}",
+                        ffmpeg_bin, "-y",
+                        "-loop", "1", "-i", str(fallback_src),
+                        "-t", f"{dur:.4f}",
                         "-vf", vf_filter,
                         *v_enc_args,
                         "-an",
@@ -227,9 +256,9 @@ class ProPipeline:
                 else:
                     vf_filter = self.camera_director.build_wide_zoom_filter(scene, size, focus, dur, fps=fps)
                     cmd = [
-                        "ffmpeg", "-y",
+                        ffmpeg_bin, "-y",
                         "-loop", "1", "-i", str(clean_p),
-                        "-t", f"{dur:.3f}",
+                        "-t", f"{dur:.4f}",
                         "-vf", vf_filter,
                         *v_enc_args,
                         "-an",
@@ -242,10 +271,10 @@ class ProPipeline:
                     logger.warning(f"Motion filter or GPU encode failed on {seg_file.name}, trying CPU fallback: {err_msg}")
                     if use_dual:
                         fallback_cmd = [
-                            "ffmpeg", "-y",
+                            ffmpeg_bin, "-y",
                             "-loop", "1", "-i", str(l_p),
                             "-loop", "1", "-i", str(r_p),
-                            "-t", f"{dur:.3f}",
+                            "-t", f"{dur:.4f}",
                             "-filter_complex", fc_graph,
                             "-map", "[v_out]",
                             "-c:v", "libx264", "-preset", "veryfast", "-crf", str(self.env_cfg.video_quality), "-pix_fmt", "yuv420p",
@@ -260,13 +289,13 @@ class ProPipeline:
                                 f"[bg][fg]overlay=(W-w)/2:(H-h)/2,fps={fps}"
                             )
                             subprocess.run(
-                                ["ffmpeg", "-y", "-loop", "1", "-i", str(img_path), "-t", f"{dur:.3f}", "-vf", simple_vf, "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-an", str(seg_file)],
+                                [ffmpeg_bin, "-y", "-loop", "1", "-i", str(fallback_src), "-t", f"{dur:.4f}", "-vf", simple_vf, "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-an", str(seg_file)],
                                 capture_output=True, check=True,
                             )
                     else:
                         fallback_cmd = [
-                            "ffmpeg", "-y", "-loop", "1", "-i", str(clean_p if panel_layout != "classic" else img_path),
-                            "-t", f"{dur:.3f}",
+                            ffmpeg_bin, "-y", "-loop", "1", "-i", str(clean_p if panel_layout != "classic" else fallback_src),
+                            "-t", f"{dur:.4f}",
                             "-vf", vf_filter,
                             "-c:v", "libx264", "-preset", "veryfast", "-crf", str(self.env_cfg.video_quality), "-pix_fmt", "yuv420p",
                             "-an", str(seg_file),
@@ -280,14 +309,20 @@ class ProPipeline:
                                 f"[bg][fg]overlay=(W-w)/2:(H-h)/2,fps={fps}"
                             )
                             subprocess.run(
-                                ["ffmpeg", "-y", "-loop", "1", "-i", str(img_path), "-t", f"{dur:.3f}", "-vf", simple_vf, "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-an", str(seg_file)],
+                                [ffmpeg_bin, "-y", "-loop", "1", "-i", str(fallback_src), "-t", f"{dur:.4f}", "-vf", simple_vf, "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-an", str(seg_file)],
                                 capture_output=True, check=True,
                             )
 
+            actual_seg_dur = _probe_seg_dur(seg_file, dur)
+            video_cursor += actual_seg_dur
             prev_valid_panel = panel_info
             segment_paths.append(seg_file)
             if (idx + 1) % 25 == 0 or idx == len(manifest.scenes) - 1:
                 logger.info(f"Rendered [{idx + 1}/{len(manifest.scenes)}] visual segments.")
+
+        logger.info(
+            f"Visual timeline synced: video={video_cursor:.3f}s vs audio={audio_cursor:.3f}s (drift={video_cursor - audio_cursor:+.3f}s)"
+        )
 
         # Stitch visual segments into raw video
         concat_file = segments_dir / "concat_list.txt"

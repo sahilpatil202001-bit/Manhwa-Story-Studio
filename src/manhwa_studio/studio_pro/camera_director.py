@@ -357,7 +357,7 @@ class CameraDirector:
 
             left_chain = (
                 f"[0:v]scale={lw}:{lh}:flags=lanczos,crop={slot_w}:{slot_h}:{l_cx}:{l_y},"
-                f"eq=brightness=-0.06:saturation=0.90[p_left];"
+                f"eq=brightness=-0.16:saturation=0.72[p_left];"
             )
             right_chain = (
                 f"[1:v]split[bg_in][r_in];"
@@ -375,16 +375,18 @@ class CameraDirector:
             )
             right_chain = (
                 f"[1:v]scale={rw}:{rh}:flags=lanczos,crop={slot_w}:{slot_h}:{r_cx}:{r_y},"
-                f"eq=brightness=-0.06:saturation=0.90[p_right];"
+                f"eq=brightness=-0.16:saturation=0.72[p_right];"
             )
 
         bg_chain = (
             f"[bg_in]scale={tw}:{th}:force_original_aspect_ratio=increase,"
             f"crop={tw}:{th},boxblur=28:5,eq=brightness=-0.16{aura_tint}[bg];"
         )
+        active_x = right_x if active_side == "right" else left_x
         shadows = (
             f"[bg]drawbox=x={max(0, left_x-8)}:y={max(0, top_y-8)}:w={slot_w+16}:h={slot_h+16}:color=black@0.42:t=fill,"
-            f"drawbox=x={max(0, right_x-8)}:y={max(0, top_y-8)}:w={slot_w+16}:h={slot_h+16}:color=black@0.42:t=fill[bg_sh];"
+            f"drawbox=x={max(0, right_x-8)}:y={max(0, top_y-8)}:w={slot_w+16}:h={slot_h+16}:color=black@0.42:t=fill,"
+            f"drawbox=x={max(0, active_x-4)}:y={max(0, top_y-4)}:w={slot_w+8}:h={slot_h+8}:color=0x38bdf8@0.92:t=fill[bg_sh];"
         )
         compose = (
             f"[bg_sh][p_left]overlay={left_x}:{top_y}[tmp];"

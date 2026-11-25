@@ -634,21 +634,21 @@ class VoiceDirector:
 
         if g == "female" or v in ("kore", "aoede", "leda", "zephyr", "callirrhoe", "autonoe"):
             if age in ("child", "teen") or v in ("leda", "zephyr"):
-                spd = 1.08 if age in ("child", "teen") else 1.06
+                spd = 1.03 if age in ("child", "teen") else 1.01
                 for yf_p, yf_txt in (
                     (Path("exports/voice_refs/story_leda.wav"), story_leda_text),
                     (Path("exports/voice_refs/ref_female_young.wav"), young_female_ref_text),
                 ):
                     if yf_p.exists():
                         return yf_p, yf_txt, spd
-            spd = 1.02 if age == "elder" else 1.06
+            spd = 0.98 if age == "elder" else 1.00
             candidates = [
                 (Path("exports/voice_refs/story_kore.wav"), story_kore_text, spd),
                 (Path("exports/demo_gemini_kore.wav"), default_ref_text, spd),
                 (Path("exports/voice_refs/ref_female_young.wav"), young_female_ref_text, spd),
             ]
         elif v == "algenib":
-            spd = 1.02 if age == "elder" else 1.05
+            spd = 0.98 if age == "elder" else 1.00
             candidates = [
                 (Path("exports/voice_refs/story_algenib.wav"), story_algenib_text, spd),
                 (Path("exports/demo_gemini_algenib.wav"), default_ref_text, spd),
@@ -656,7 +656,7 @@ class VoiceDirector:
                 (Path("exports/demo_gemini_puck.wav"), default_ref_text, spd),
             ]
         elif age in ("elder",) or v == "fenrir":
-            spd = 0.99 if age == "elder" else 1.03
+            spd = 0.96 if age == "elder" else 0.99
             candidates = [
                 (Path("exports/voice_refs/story_fenrir.wav"), story_fenrir_text, spd),
                 (Path("exports/demo_gemini_fenrir.wav"), default_ref_text, spd),
@@ -665,12 +665,12 @@ class VoiceDirector:
             ]
         elif v in ("charon", "orus") or age == "adult":
             candidates = [
-                (Path("exports/voice_refs/story_charon.wav"), story_charon_text, 1.05),
-                (Path("exports/demo_gemini_charon.wav"), default_ref_text, 1.05),
-                (Path("exports/demo_gemini_puck.wav"), default_ref_text, 1.05),
+                (Path("exports/voice_refs/story_charon.wav"), story_charon_text, 1.00),
+                (Path("exports/demo_gemini_charon.wav"), default_ref_text, 1.00),
+                (Path("exports/demo_gemini_puck.wav"), default_ref_text, 1.00),
             ]
         else:
-            spd = 1.09 if age in ("child", "teen") else 1.07
+            spd = 1.03 if age in ("child", "teen") else 1.01
             candidates = [
                 (Path("exports/voice_refs/story_puck.wav"), story_puck_text, spd),
                 (Path("exports/demo_gemini_puck.wav"), default_ref_text, spd),

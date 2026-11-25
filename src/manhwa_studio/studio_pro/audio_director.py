@@ -239,9 +239,62 @@ class AudioDirector:
         """Disabled procedural sine-wave SFX triggers so narration and BGM play cleanly without glitch sounds."""
         return None
 
+    @staticmethod
+    def _resolve_media_tool(tool_name: str) -> str:
+        """Resolve ffmpeg/ffprobe binary path with Windows fallback."""
+        import os
+        import shutil
+
+        try:
+            from manhwa_studio.rendering.ffmpeg import get_ffmpeg_path, get_ffprobe_path
+
+            return get_ffprobe_path() if tool_name == "ffprobe" else get_ffmpeg_path()
+        except Exception:
+            found = shutil.which(tool_name)
+            if found:
+                return found
+            if os.name == "nt":
+                win_fallback = Path(r"C:\ffmpeg\bin") / f"{tool_name}.exe"
+                if win_fallback.exists():
+                    return str(win_fallback)
+            return tool_name
+
+    @classmethod
+    def _probe_audio_duration(cls, path: Path, fallback: float, stream_selector: str = "a:0") -> float:
+        """Probe exact encoded duration of a media file via ffprobe."""
+        ffprobe_bin = cls._resolve_media_tool("ffprobe")
+        queries = (
+            ["-show_entries", "format=duration"],
+            ["-select_streams", stream_selector, "-show_entries", "stream=duration"],
+        )
+        for q_args in queries:
+            try:
+                res = subprocess.run(
+                    [
+                        ffprobe_bin,
+                        "-v", "error",
+                        *q_args,
+                        "-of", "default=noprint_wrappers=1:nokey=1",
+                        str(path),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                )
+                if res.returncode == 0 and res.stdout.strip():
+                    for line in res.stdout.strip().splitlines():
+                        raw = line.strip()
+                        if raw and raw != "N/A":
+                            val = float(raw)
+                            if val > 0.05:
+                                return val
+            except Exception:
+                pass
+        return fallback
+
     def build_voice_timeline(self, manifest: SceneManifest, output_voice_track: Path) -> float:
         """
-        Concatenate all individual scene audio clips with micro-fades and exact scene offsets.
+        Concatenate all individual scene audio clips with exact probed durations and async PTS alignment.
         Returns total audio duration in seconds.
         """
         concat_list_file = output_voice_track.with_suffix(".concat.txt")
@@ -250,19 +303,24 @@ class AudioDirector:
         total_dur = 0.0
         for sc in manifest.scenes:
             if sc.actual_audio_path and Path(sc.actual_audio_path).exists():
-                lines.append(f"file '{Path(sc.actual_audio_path).resolve().as_posix()}'")
-                total_dur += sc.actual_audio_duration or sc.duration
+                ap = Path(sc.actual_audio_path)
+                exact_d = self._probe_audio_duration(ap, float(sc.actual_audio_duration or sc.duration))
+                sc.actual_audio_duration = exact_d
+                lines.append(f"file '{ap.resolve().as_posix()}'")
+                total_dur += exact_d
             else:
                 logger.warning(f"Audio missing for scene {sc.scene_id}")
 
         concat_list_file.write_text("\n".join(lines), encoding="utf-8")
 
+        ffmpeg_bin = self._resolve_media_tool("ffmpeg")
         cmd = [
-            "ffmpeg",
+            ffmpeg_bin,
             "-y",
             "-f", "concat",
             "-safe", "0",
             "-i", str(concat_list_file),
+            "-af", "aresample=async=1:first_pts=0",
             "-c:a", "libmp3lame",
             "-b:a", "192k",
             str(output_voice_track),
