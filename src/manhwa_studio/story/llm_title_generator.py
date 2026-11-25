@@ -7,6 +7,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import urllib.error
 import urllib.request
 from io import BytesIO
 from pathlib import Path
@@ -127,6 +128,7 @@ _OPENAI_AUTH_FAILED: bool = False
 _GROQ_KEY_CURSOR: int = 0
 _OPENROUTER_KEY_CURSOR: int = 0
 _DEAD_PROVIDER_KEYS: set[str] = set()  # Blacklist keys that return 401/402/403 so failover is instant
+_DEAD_PROVIDER_MODELS: set[str] = set()  # Cache 404 model IDs so they aren't retried every batch
 
 
 def _parse_multi_keys(env_vars: List[str], explicit_key: Optional[str] = None) -> List[str]:
@@ -204,7 +206,7 @@ def _query_openai_compat_vision(
 
     for model_name in models:
         clean_model = model_name.strip()
-        if not clean_model:
+        if not clean_model or f"{provider_name}:{clean_model}" in _DEAD_PROVIDER_MODELS:
             continue
         start_offset = cursor % n_keys
         ordered_keys = [
@@ -224,12 +226,16 @@ def _query_openai_compat_vision(
             else:
                 _OPENROUTER_KEY_CURSOR = k_idx % n_keys
 
-            payload = {
+            payload: Dict[str, Any] = {
                 "model": clean_model,
                 "messages": [{"role": "user", "content": content}],
-                "response_format": {"type": "json_object"},
                 "temperature": 0.5,
             }
+            # Groq Vision rejects response_format=json_object when image_url parts are attached;
+            # our prompt already enforces strict JSON and _extract_json_payload() parses it cleanly.
+            if not (provider_name == "Groq" and image_panels):
+                payload["response_format"] = {"type": "json_object"}
+
             headers = {
                 "Authorization": f"Bearer {single_key}",
                 "Content-Type": "application/json",
@@ -254,7 +260,13 @@ def _query_openai_compat_vision(
                     )
                     return parsed, f"{provider_name.lower()}:{clean_model}"
             except Exception as exc:
-                err_str = str(exc)
+                err_body = ""
+                if isinstance(exc, urllib.error.HTTPError):
+                    try:
+                        err_body = exc.read().decode("utf-8", errors="ignore").strip()[:260]
+                    except Exception:
+                        pass
+                err_str = f"{exc} {err_body}".strip()
                 if any(c in err_str for c in ("401", "402", "403", "Unauthorized", "Payment Required")):
                     _DEAD_PROVIDER_KEYS.add(single_key)
                     logger.warning(
@@ -268,17 +280,18 @@ def _query_openai_compat_vision(
                         f"{provider_name} model '{clean_model}' hit rate limit (429) on key ...{single_key[-6:]}, trying next key/model..."
                     )
                     continue
-                if "404" in err_str:
-                    logger.warning(f"{provider_name} model '{clean_model}' not found (404), trying next model...")
+                if "404" in err_str or "model_not_found" in err_str or "decommissioned" in err_str:
+                    _DEAD_PROVIDER_MODELS.add(f"{provider_name}:{clean_model}")
+                    logger.warning(f"{provider_name} model '{clean_model}' unavailable ({err_str}), caching skip & trying next model...")
                     break
                 if "503" in err_str or "502" in err_str or "timed out" in err_str.lower():
                     transient_fails += 1
-                    logger.warning(f"{provider_name} model '{clean_model}' transient error on key ...{single_key[-6:]}: {exc}")
+                    logger.warning(f"{provider_name} model '{clean_model}' transient error on key ...{single_key[-6:]}: {err_str}")
                     if transient_fails >= min(3, max(2, n_keys)):
                         break
                     time.sleep(1.5 * transient_fails)
                     continue
-                logger.warning(f"{provider_name} model '{clean_model}' failed on key ...{single_key[-6:]}: {exc}")
+                logger.warning(f"{provider_name} model '{clean_model}' failed on key ...{single_key[-6:]}: {err_str}")
                 continue
     return None
 
@@ -321,19 +334,19 @@ def query_groq_api(
     timeout: int = 60,
 ) -> Optional[tuple[Any, str]]:
     """
-    Query Groq Vision models (Llama 4 Scout / Maverick).
-    Automatically splits batches larger than 4 images into sub-chunks (Groq's 5-image limit)
-    and merges the resulting JSON scenes cleanly so zero panels are ever dropped!
+    Query Groq Vision models (e.g. qwen/qwen3.8-27b, meta-models/muse-spark-open).
+    Automatically splits batches larger than 3 images into sub-chunks (Groq Qwen vision's
+    3-image-per-request limit) and merges the resulting JSON scenes cleanly!
     """
     keys = _parse_multi_keys(["GROQ_API_KEY", "GROQ_API_KEYS"], explicit_key=api_key)
     if not keys:
         return None
     models = get_env_config().groq_models or [
-        "meta-llama/llama-4-scout-17b-16e-instruct",
-        "meta-llama/llama-4-maverick-17b-128e-instruct",
+        "qwen/qwen3.8-27b",
+        "meta-models/muse-spark-open",
     ]
 
-    if len(image_panels) <= 4:
+    if len(image_panels) <= 3:
         return _query_openai_compat_vision(
             provider_name="Groq",
             endpoint_url="https://api.groq.com/openai/v1/chat/completions",
@@ -344,13 +357,13 @@ def query_groq_api(
             timeout=timeout,
         )
 
-    # Auto-chunk into sub-batches of 4 images to respect Groq's max-5-images-per-request limit
+    # Auto-chunk into sub-batches of 3 images to respect Groq's max-3-images-per-request limit
     merged_scenes: List[dict] = []
     merged_meta: Dict[str, Any] = {}
-    last_model = "groq:llama-4-scout"
+    last_model = "groq:qwen/qwen3.8-27b"
 
-    for start in range(0, len(image_panels), 4):
-        sub_panels = image_panels[start : start + 4]
+    for start in range(0, len(image_panels), 3):
+        sub_panels = image_panels[start : start + 3]
         sub_names = ", ".join(p[0] for p in sub_panels)
         sub_prompt = (
             f"{prompt_text}\n\n"
@@ -541,11 +554,18 @@ def query_openai_api(
                 logger.info(f"Successfully queried OpenAI with model '{model_name}'")
                 return parsed, model_name
         except Exception as exc:
-            if "401" in str(exc) or "Unauthorized" in str(exc):
+            err_body = ""
+            if isinstance(exc, urllib.error.HTTPError):
+                try:
+                    err_body = exc.read().decode("utf-8", errors="ignore").strip()[:260]
+                except Exception:
+                    pass
+            err_str = f"{exc} {err_body}".strip()
+            if "401" in err_str or "Unauthorized" in err_str:
                 _OPENAI_AUTH_FAILED = True
-                logger.info("OpenAI API key unauthorized (401) — disabling OpenAI fallback for this run.")
+                logger.warning(f"OpenAI API key unauthorized (401): {err_str}")
                 return None
-            logger.warning(f"OpenAI model '{model_name}' failed ({exc}), attempting next...")
+            logger.warning(f"OpenAI model '{model_name}' failed ({err_str}), attempting next...")
             continue
     return None
 
@@ -656,6 +676,11 @@ def suggest_chapter_title_and_hook(
             if not result:
                 raise RuntimeError("Local Ollama could not generate a title and hook. Is Ollama running and is the model installed?")
             parsed, model_used = result
+        elif provider_pref == "openai":
+            res_oa = query_openai_api(prompt_text, ollama_images, timeout=40)
+            if not res_oa:
+                raise RuntimeError(f"OpenAI failed to generate title and hook for Chapter {chapter}. Check OPENAI_API_KEY in .env.")
+            parsed, model_used = res_oa
         else:
             # Ordered failover for Title + Hook: preferred provider first, then Gemini -> OpenRouter -> Groq
             if provider_pref == "openrouter":
@@ -685,8 +710,13 @@ def suggest_chapter_title_and_hook(
                     parsed, model_used = res_gr
 
             if not parsed:
+                res_oa = query_openai_api(prompt_text, ollama_images, timeout=30)
+                if res_oa:
+                    parsed, model_used = res_oa
+
+            if not parsed:
                 raise RuntimeError(
-                    f"All configured providers (Gemini/OpenRouter/Groq) failed to generate title and hook for Chapter {chapter}."
+                    f"All configured providers (Gemini/OpenRouter/Groq/OpenAI) failed to generate title and hook for Chapter {chapter}."
                 )
         if not isinstance(parsed, dict):
             raise ValueError("model returned a JSON value other than an object")
@@ -995,8 +1025,8 @@ def generate_chapter_screenplay(
                 if res_ollama:
                     parsed, active_model_used = res_ollama
 
-            # 2. Try Gemini unless Ollama is the explicitly selected provider.
-            if not parsed and key and provider_pref != "ollama":
+            # 2. Try Gemini unless Ollama or OpenAI is explicitly selected.
+            if not parsed and key and provider_pref not in {"ollama", "openai"}:
                 res = query_gemini_api(payload, key, timeout=60)
                 if res:
                     data, model_used = res
@@ -1007,20 +1037,20 @@ def generate_chapter_screenplay(
                     except Exception as e:
                         logger.warning(f"Failed to parse Gemini JSON output: {e}")
 
-            # 3. Seamless failover to OpenRouter Vision (Gemini 2.5 Flash / Qwen2.5-VL-72B / Llama 4)
-            if not parsed and provider_pref not in {"openrouter", "ollama"}:
+            # 3. Seamless failover to OpenRouter Vision (skipped when openai/ollama is explicitly selected)
+            if not parsed and provider_pref not in {"openrouter", "ollama", "openai"}:
                 res_or = query_openrouter_api(prompt_text, batch_images_b64)
                 if res_or:
                     parsed, active_model_used = res_or
 
-            # 4. Seamless failover to Groq Free Vision (Llama 4 Scout / Maverick, auto-chunked <= 4 imgs)
-            if not parsed and provider_pref not in {"groq", "ollama"}:
+            # 4. Seamless failover to Groq Free Vision (skipped when openai/ollama is explicitly selected)
+            if not parsed and provider_pref not in {"groq", "ollama", "openai"}:
                 res_gr = query_groq_api(prompt_text, batch_images_b64)
                 if res_gr:
                     parsed, active_model_used = res_gr
 
             # 5. Optional local Ollama fallback if explicitly enabled via OLLAMA_FALLBACK=1
-            if not parsed and use_ollama and provider_pref != "ollama":
+            if not parsed and use_ollama and provider_pref not in {"ollama", "openai"}:
                 res_ollama = query_ollama_api(prompt_text, batch_images_b64)
                 if res_ollama:
                     parsed, active_model_used = res_ollama

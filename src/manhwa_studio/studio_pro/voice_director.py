@@ -625,40 +625,54 @@ class VoiceDirector:
 
         default_ref_text = "तुमने बहुत बड़ी गलती कर दी, अब तुम्हारा अंत निश्चित है।"
         young_female_ref_text = "चिंता मत करो बेबी, अब इस दुनिया पर सिर्फ हमारी हुकूमत होगी!"
+        story_puck_text = "तो दोस्तों, अब कहानी में वो जबरदस्त मोड़ आने वाला है, जिसे देखकर सबके होश उड़ जाएंगे!"
+        story_charon_text = "इतनी जल्दी हार मानने वाला मैं नहीं हूँ, अब असली खेल तो अभी शुरू हुआ है।"
+        story_fenrir_text = "तुम्हें अंदाज़ा भी नहीं है कि तुमने आज किस ताकत को जगा दिया है, अब अंजाम भुगतने के लिए तैयार रहो।"
+        story_algenib_text = "कमाल है, इतने हमलों के बाद भी तुम खड़े हो? लेकिन इस बार बचने का कोई रास्ता नहीं मिलेगा!"
+        story_kore_text = "मुझे तुम पर पूरा भरोसा था, लेकिन आज जो सच सामने आया है वो सब कुछ बदल देगा।"
+        story_leda_text = "अरे सुनो तो सही! इतना सीरियस होने की ज़रूरत नहीं है, अभी तो सबसे मज़ेदार हिस्सा बाकी है!"
 
         if g == "female" or v in ("kore", "aoede", "leda", "zephyr", "callirrhoe", "autonoe"):
             if age in ("child", "teen") or v in ("leda", "zephyr"):
-                yf = Path("exports/voice_refs/ref_female_young.wav")
-                if yf.exists():
-                    spd = 1.04 if age in ("child", "teen") else 1.01
-                    return yf, young_female_ref_text, spd
-            spd = 0.96 if age == "elder" else 1.0
+                spd = 1.08 if age in ("child", "teen") else 1.06
+                for yf_p, yf_txt in (
+                    (Path("exports/voice_refs/story_leda.wav"), story_leda_text),
+                    (Path("exports/voice_refs/ref_female_young.wav"), young_female_ref_text),
+                ):
+                    if yf_p.exists():
+                        return yf_p, yf_txt, spd
+            spd = 1.02 if age == "elder" else 1.06
             candidates = [
+                (Path("exports/voice_refs/story_kore.wav"), story_kore_text, spd),
                 (Path("exports/demo_gemini_kore.wav"), default_ref_text, spd),
                 (Path("exports/voice_refs/ref_female_young.wav"), young_female_ref_text, spd),
             ]
         elif v == "algenib":
-            spd = 0.96 if age == "elder" else 0.99
+            spd = 1.02 if age == "elder" else 1.05
             candidates = [
+                (Path("exports/voice_refs/story_algenib.wav"), story_algenib_text, spd),
                 (Path("exports/demo_gemini_algenib.wav"), default_ref_text, spd),
                 (Path("exports/demo_gemini_fenrir.wav"), default_ref_text, spd),
                 (Path("exports/demo_gemini_puck.wav"), default_ref_text, spd),
             ]
         elif age in ("elder",) or v == "fenrir":
-            spd = 0.93 if age == "elder" else 0.97
+            spd = 0.99 if age == "elder" else 1.03
             candidates = [
+                (Path("exports/voice_refs/story_fenrir.wav"), story_fenrir_text, spd),
                 (Path("exports/demo_gemini_fenrir.wav"), default_ref_text, spd),
                 (Path("exports/demo_gemini_algenib.wav"), default_ref_text, spd),
                 (Path("exports/demo_gemini_puck.wav"), default_ref_text, spd),
             ]
         elif v in ("charon", "orus") or age == "adult":
             candidates = [
-                (Path("exports/demo_gemini_charon.wav"), default_ref_text, 0.98),
-                (Path("exports/demo_gemini_puck.wav"), default_ref_text, 0.98),
+                (Path("exports/voice_refs/story_charon.wav"), story_charon_text, 1.05),
+                (Path("exports/demo_gemini_charon.wav"), default_ref_text, 1.05),
+                (Path("exports/demo_gemini_puck.wav"), default_ref_text, 1.05),
             ]
         else:
-            spd = 1.04 if age in ("child", "teen") else 1.0
+            spd = 1.09 if age in ("child", "teen") else 1.07
             candidates = [
+                (Path("exports/voice_refs/story_puck.wav"), story_puck_text, spd),
                 (Path("exports/demo_gemini_puck.wav"), default_ref_text, spd),
                 (Path("exports/demo_gemini_charon.wav"), default_ref_text, spd),
             ]
@@ -693,6 +707,10 @@ class VoiceDirector:
             gen_text=devanagari_text,
             file_wave=str(temp_wav),
             speed=age_speed,
+            nfe_step=32,
+            cfg_strength=2.2,
+            remove_silence=True,
+            cross_fade_duration=0.12,
         )
         self._enhance_vocal_audio(temp_wav, output_file, rate=rate or "+2%")
         if temp_wav.exists():
@@ -703,10 +721,10 @@ class VoiceDirector:
 
     def _enhance_vocal_audio(self, raw_audio: Path, target_audio: Path, rate: str = "+0%") -> None:
         """
-        Apply Transparent Organic Human Mastering Chain via FFmpeg:
-        - Preserves 100% of the neural voice's natural human vocal tract formants & breath dynamics
-        - Cuts 280Hz boxiness and adds subtle 3.2kHz studio vocal presence for crisp Puck-like clarity
-        - Supports subtle tempo adjustment (e.g. +2% -> atempo=1.02) matching dashboard rate settings
+        Apply Modern Storytelling Broadcast Mastering Chain via FFmpeg:
+        - Strips sluggish dead silence at start/end/mid-sentence so speech never feels lagging
+        - Warm 165Hz chest body, clean 290Hz de-mud, crisp 3.4kHz & 7.5kHz studio presence
+        - Gentle vocal compression for intimate, upfront Gemini-like storytelling clarity
         """
         atempo_filter = ""
         m = re.match(r"^([+-]?\d+)\s*%$", (rate or "+0%").strip())
@@ -717,13 +735,18 @@ class VoiceDirector:
                 atempo_filter = f"atempo={factor:.2f},"
 
         filter_str = (
+            "silenceremove=start_periods=1:start_silence=0.03:start_threshold=-42dB:"
+            "stop_periods=-1:stop_duration=0.20:stop_threshold=-42dB,"
             f"{atempo_filter}"
             "highpass=f=75,"
-            "equalizer=f=280:t=q:w=1.5:g=-1.8,"
-            "equalizer=f=3200:t=q:w=1.2:g=1.6,"
-            "afade=t=in:st=0:d=0.02,"
-            "apad=pad_dur=0.14,"
-            "loudnorm=I=-16:TP=-1.5:LRA=14"
+            "equalizer=f=165:t=q:w=1.2:g=1.4,"
+            "equalizer=f=290:t=q:w=1.5:g=-2.0,"
+            "equalizer=f=3400:t=q:w=1.2:g=2.2,"
+            "equalizer=f=7500:t=q:w=1.4:g=1.2,"
+            "acompressor=threshold=-18dB:ratio=2.4:attack=8:release=110:makeup=1.5,"
+            "afade=t=in:st=0:d=0.015,"
+            "apad=pad_dur=0.06,"
+            "loudnorm=I=-15:TP=-1.2:LRA=10"
         )
         cmd = [
             "ffmpeg", "-y",

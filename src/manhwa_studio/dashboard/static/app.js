@@ -337,9 +337,14 @@ function renderMatrixTable() {
       if (c.overall_status === "inbox_only") {
         const folderParts = (c.inbox_info?.folder_path || "").split(/[/\\]/).filter(Boolean);
         const inboxDir = folderParts.length >= 3 ? folderParts.slice(0, 3).join("/") : "";
-        actionsHtml = `<button class="btn btn-sm btn-cyan" onclick="queueSingleInbox('${escapeJs(
-          sObj.series_name
-        )}', ${c.chapter}, '${escapeJs(inboxDir)}')">Process Inbox</button>`;
+        actionsHtml = `
+          <button class="btn btn-sm btn-cyan" onclick="queueSingleInbox('${escapeJs(
+            sObj.series_name
+          )}', ${c.chapter}, '${escapeJs(inboxDir)}')">Process Inbox</button>
+          <button class="btn btn-sm btn-primary" onclick="openGeminiProImporterForChapter('${escapeJs(
+            sObj.series_slug
+          )}', '${escapeJs(sObj.series_name)}', ${c.chapter})" title="Write script free using your Gemini AI Pro web chat">&#10024; Gemini Pro (Free)</button>
+        `;
       } else {
         actionsHtml = `
           <button class="btn btn-sm btn-emerald" onclick="queueSingleProRender('${escapeJs(
@@ -1026,6 +1031,110 @@ async function saveStudioManifestEdits() {
     showToast(`Saved ${res.updated_scenes} scenes to scene_manifest.json!`);
   } else {
     showToast(`Error saving manifest: ${res.error || "Unknown"}`);
+  }
+}
+
+// =========================================================================
+// Gemini AI Pro Web-Chat Script Importer (₹0 Unlimited)
+// =========================================================================
+let _lastGeminiProSheetsDir = "";
+
+function toggleGeminiProImporter() {
+  const box = document.getElementById("gemini-pro-importer");
+  if (!box) return;
+  box.style.display = box.style.display === "none" || !box.style.display ? "block" : "none";
+}
+
+async function openGeminiProImporterForChapter(seriesSlug, seriesName, chapter) {
+  switchTab("tab-studio");
+  const seriesSel = document.getElementById("studio-series-select");
+  if (seriesSel) {
+    seriesSel.value = seriesSlug;
+    populateStudioChapters();
+  }
+  const chSel = document.getElementById("studio-chapter-select");
+  if (chSel) {
+    let found = false;
+    for (const opt of chSel.options) {
+      if (parseInt(opt.value, 10) === chapter) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      const opt = document.createElement("option");
+      opt.value = String(chapter);
+      opt.textContent = `Ch.${chapter} (Inbox)`;
+      chSel.appendChild(opt);
+    }
+    chSel.value = String(chapter);
+  }
+  const box = document.getElementById("gemini-pro-importer");
+  if (box) box.style.display = "block";
+  await prepareGeminiProPack();
+}
+
+async function prepareGeminiProPack() {
+  const seriesSel = document.getElementById("studio-series-select");
+  const slug = seriesSel?.value;
+  const seriesName = seriesSel?.options[seriesSel.selectedIndex]?.text || slug;
+  const ch = parseInt(document.getElementById("studio-chapter-select")?.value, 10);
+  if (!slug || isNaN(ch)) {
+    showToast("Select a series and chapter first!");
+    return;
+  }
+  const statusEl = document.getElementById("gpro-status");
+  if (statusEl) statusEl.innerHTML = `<span style="color:#38bdf8;">Preparing numbered panel sheets for ${escapeHtml(seriesName)} Ch.${ch}...</span>`;
+
+  const res = await apiPost("/api/studio/gemini-pro-pack", {
+    series_slug: slug,
+    series_name: seriesName,
+    chapter: ch,
+  });
+  if (res && res.ok) {
+    _lastGeminiProSheetsDir = res.sheets_dir;
+    const promptBox = document.getElementById("gpro-prompt-box");
+    if (promptBox) promptBox.value = res.prompt;
+    const openBtn = document.getElementById("btn-open-gpro-sheets");
+    if (openBtn) openBtn.disabled = false;
+    if (statusEl) {
+      statusEl.innerHTML = `<span style="color:#4ade80;">&#9989; Ready!</span> Created <strong>${res.sheet_files.length} numbered sheets</strong> (${res.panel_count} panels) in <code>${escapeHtml(res.sheets_dir)}</code>. Click <strong>Copy Prompt</strong> + <strong>Open Sheets Folder</strong>, drop the sheets into Gemini Pro, and paste the JSON on the right!`;
+    }
+    showToast(`Created ${res.sheet_files.length} numbered panel sheets!`);
+  } else {
+    if (statusEl) statusEl.innerHTML = `<span style="color:#f87171;">Error: ${escapeHtml(res?.error || "Failed to prepare sheets")}</span>`;
+  }
+}
+
+function openGeminiProSheetsFolder() {
+  if (_lastGeminiProSheetsDir) {
+    openWorkspaceFolder(_lastGeminiProSheetsDir);
+  }
+}
+
+async function importGeminiProScript() {
+  const seriesSel = document.getElementById("studio-series-select");
+  const slug = seriesSel?.value;
+  const seriesName = seriesSel?.options[seriesSel.selectedIndex]?.text || slug;
+  const ch = parseInt(document.getElementById("studio-chapter-select")?.value, 10);
+  const rawJson = (document.getElementById("gpro-json-input")?.value || "").trim();
+  if (!slug || isNaN(ch) || !rawJson) {
+    showToast("Select a chapter and paste the JSON from Gemini Pro first!");
+    return;
+  }
+  const res = await apiPost("/api/studio/gemini-pro-import", {
+    series_slug: slug,
+    series_name: seriesName,
+    chapter: ch,
+    raw_json: rawJson,
+  });
+  if (res && res.ok) {
+    showToast(`Imported ${res.scene_count} scenes for Ch.${ch} ("${res.title}")! Ready to Render!`);
+    document.getElementById("gpro-json-input").value = "";
+    await loadStudioChapter();
+    await refreshAll();
+  } else {
+    showToast(`Import error: ${res?.error || "Invalid JSON"}`);
   }
 }
 

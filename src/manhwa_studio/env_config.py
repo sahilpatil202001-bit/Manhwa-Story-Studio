@@ -97,11 +97,11 @@ class StudioEnvConfig(BaseModel):
             "gemini-flash-latest",
         ]
     )
-    openai_models: List[str] = Field(default_factory=lambda: ["gpt-4o-mini", "gpt-4o"])
+    openai_models: List[str] = Field(default_factory=lambda: ["gpt-6-luna", "gpt-6.1-terra", "gpt-4o-mini"])
     groq_models: List[str] = Field(
         default_factory=lambda: [
-            "meta-llama/llama-4-scout-17b-16e-instruct",
-            "meta-llama/llama-4-maverick-17b-128e-instruct",
+            "qwen/qwen3.8-27b",
+            "meta-models/muse-spark-open",
         ]
     )
     openrouter_models: List[str] = Field(
@@ -171,12 +171,12 @@ class StudioEnvConfig(BaseModel):
                     "gemini-flash-latest",
                 ],
             ),
-            openai_models=_env_list("STUDIO_OPENAI_MODELS", ["gpt-4o-mini", "gpt-4o"]),
+            openai_models=_env_list("STUDIO_OPENAI_MODELS", ["gpt-6-luna", "gpt-6.1-terra", "gpt-4o-mini"]),
             groq_models=_env_list(
                 "STUDIO_GROQ_MODELS",
                 [
-                    "meta-llama/llama-4-scout-17b-16e-instruct",
-                    "meta-llama/llama-4-maverick-17b-128e-instruct",
+                    "qwen/qwen3.8-27b",
+                    "meta-models/muse-spark-open",
                 ],
             ),
             openrouter_models=_env_list(

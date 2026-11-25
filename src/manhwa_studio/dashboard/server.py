@@ -780,6 +780,193 @@ def make_handler_class(app_state: DashboardAppState):
             try:
                 body = self._read_json_body()
 
+                if path == "/api/studio/gemini-pro-pack":
+                    from PIL import Image, ImageDraw, ImageFont
+                    from manhwa_studio.story.character_registry import CharacterRegistry
+                    from manhwa_studio.ingestion.strip_slicer import slice_chapter_directory
+
+                    slug = str(body.get("series_slug", "")).strip()
+                    series_name = str(body.get("series_name") or slug.replace("_", " ").title()).strip()
+                    ch = int(body.get("chapter", 1))
+                    chap_dir = app_state.root_dir / "data" / "projects" / slug / f"chapter_{ch:03d}"
+                    artwork_dir = chap_dir / "artwork"
+
+                    # If not ingested yet, pull & slice from assets/inbox automatically (0 API calls)
+                    if not artwork_dir.exists() or not any(artwork_dir.glob("*.*")):
+                        inbox_rel = _resolve_inbox_path(f"assets/inbox/{series_name}", slug, app_state.root_dir)
+                        inbox_series_dir = app_state.root_dir / inbox_rel
+                        ch_folder = None
+                        if inbox_series_dir.exists():
+                            for cand in sorted(inbox_series_dir.iterdir()):
+                                if cand.is_dir():
+                                    m_ch = re.search(r"(\d+)", cand.name)
+                                    if m_ch and int(m_ch.group(1)) == ch:
+                                        ch_folder = cand
+                                        break
+                        if not ch_folder:
+                            self._send_json({"ok": False, "error": f"No artwork found in {chap_dir} or inbox for Ch.{ch}."}, status=404)
+                            return
+                        slice_chapter_directory(ch_folder)
+                        artwork_dir.mkdir(parents=True, exist_ok=True)
+                        exts = {".jpg", ".jpeg", ".png", ".webp"}
+                        src_imgs = sorted([p for p in ch_folder.iterdir() if p.is_file() and p.suffix.lower() in exts])
+                        import shutil as _shutil
+                        for idx, sp in enumerate(src_imgs, start=1):
+                            dst_name = f"panel_{idx:03d}{sp.suffix.lower()}"
+                            _shutil.copy2(sp, artwork_dir / dst_name)
+
+                    exts = {".jpg", ".jpeg", ".png", ".webp"}
+                    panels = sorted([p for p in artwork_dir.iterdir() if p.is_file() and p.suffix.lower() in exts])
+                    if not panels:
+                        self._send_json({"ok": False, "error": "No panel images found in chapter artwork folder."}, status=404)
+                        return
+
+                    # Build clean 4x5 (20 panels/sheet) high-res numbered sheets so Gemini Pro reads every bubble
+                    sheets_dir = chap_dir / "reports" / "gemini_pro_sheets"
+                    sheets_dir.mkdir(parents=True, exist_ok=True)
+                    for old in sheets_dir.glob("sheet_*.jpg"):
+                        old.unlink(missing_ok=True)
+
+                    cols, rows_per_sheet = 4, 5
+                    per_sheet = cols * rows_per_sheet
+                    cell_w, cell_h, hdr_h = 460, 620, 34
+                    try:
+                        font = ImageFont.truetype("arialbd.ttf", 20)
+                    except Exception:
+                        font = ImageFont.load_default()
+
+                    sheet_files: List[str] = []
+                    for s_idx in range(0, len(panels), per_sheet):
+                        chunk = panels[s_idx : s_idx + per_sheet]
+                        n_rows = (len(chunk) + cols - 1) // cols
+                        canvas = Image.new("RGB", (cols * cell_w, n_rows * (cell_h + hdr_h)), (18, 18, 24))
+                        draw = ImageDraw.Draw(canvas)
+                        for c_idx, p_path in enumerate(chunk):
+                            r_i, c_i = divmod(c_idx, cols)
+                            x0, y0 = c_i * cell_w, r_i * (cell_h + hdr_h)
+                            draw.rectangle([x0, y0, x0 + cell_w - 2, y0 + hdr_h], fill=(30, 41, 59))
+                            draw.text((x0 + 10, y0 + 6), p_path.name, fill=(56, 189, 248), font=font)
+                            try:
+                                with Image.open(p_path) as im:
+                                    im_rgb = im.convert("RGB")
+                                    im_rgb.thumbnail((cell_w - 8, cell_h - 8), Image.Resampling.LANCZOS)
+                                    px = x0 + (cell_w - im_rgb.size[0]) // 2
+                                    py = y0 + hdr_h + (cell_h - im_rgb.size[1]) // 2
+                                    canvas.paste(im_rgb, (px, py))
+                            except Exception:
+                                pass
+                        sheet_name = f"sheet_{(s_idx // per_sheet) + 1:02d}.jpg"
+                        canvas.save(sheets_dir / sheet_name, "JPEG", quality=88)
+                        sheet_files.append(sheet_name)
+
+                    reg = CharacterRegistry(series_name)
+                    roster_hint = reg.format_roster_for_prompt()
+                    panel_names_csv = ", ".join(p.name for p in panels)
+                    prompt = (
+                        f"You are a top viral Indian Hindi Manhwa Recap & Comic-Dub Screenwriter.\n"
+                        f"Series: '{series_name}' — Chapter {ch} ({len(panels)} panels across {len(sheet_files)} attached numbered sheets).\n"
+                        f"{roster_hint}\n\n"
+                        f"TASK: Read ALL {len(panels)} panels in exact sequential order ({panel_names_csv}) and write a gripping, fast-paced, natural Hindi/Hinglish screenplay (Devanagari Hindi with natural modern words like Master, Power, Attack, System written in Devanagari).\n"
+                        f"RULES:\n"
+                        f"1. Output STRICTLY valid JSON (no commentary outside JSON) with keys: title, hindi_hook, scenes.\n"
+                        f"2. Each item in 'scenes' MUST have: suggested_panel (exact filename like 'panel_001.webp'), speaker (exact character name or 'Narrator'), speaker_gender ('male', 'female', or 'narrator'), scene_purpose ('hook', 'dialogue', 'action', 'reveal', 'climax', 'cliffhanger'), hindi_text (1-2 punchy spoken Hindi sentences — NO repeated lines, NO robotic filler), motion_preset ('pan_down', 'pan_up', 'slow_zoom_in', 'slow_zoom_out').\n"
+                        f"3. Cover EVERY panel cleanly in order from {panels[0].name} to {panels[-1].name}.\n"
+                        f"4. Return ONLY the JSON object:\n"
+                        f'{{"title": "...", "hindi_hook": "...", "scenes": [{{"suggested_panel": "{panels[0].name}", "speaker": "Narrator", "speaker_gender": "narrator", "scene_purpose": "hook", "hindi_text": "...", "motion_preset": "slow_zoom_in"}}]}}'
+                    )
+                    self._send_json({
+                        "ok": True,
+                        "sheets_dir": str(sheets_dir.relative_to(app_state.root_dir)).replace("\\", "/"),
+                        "sheet_files": sheet_files,
+                        "panel_count": len(panels),
+                        "prompt": prompt,
+                    })
+                    return
+
+                if path == "/api/studio/gemini-pro-import":
+                    from manhwa_studio.schemas import SceneItem, SceneManifest
+                    from manhwa_studio.story.llm_title_generator import _extract_json_payload
+                    from manhwa_studio.story.script_writer import save_scene_manifest
+
+                    slug = str(body.get("series_slug", "")).strip()
+                    series_name = str(body.get("series_name") or slug.replace("_", " ").title()).strip()
+                    ch = int(body.get("chapter", 1))
+                    raw_text = str(body.get("raw_json", "")).strip()
+                    if not raw_text:
+                        self._send_json({"ok": False, "error": "Please paste the JSON output from Gemini Pro first."}, status=400)
+                        return
+
+                    parsed = _extract_json_payload(raw_text)
+                    scenes_raw = parsed if isinstance(parsed, list) else parsed.get("scenes", [])
+                    if not isinstance(scenes_raw, list) or not scenes_raw:
+                        self._send_json({"ok": False, "error": "No 'scenes' array found in pasted JSON."}, status=400)
+                        return
+
+                    chap_dir = app_state.root_dir / "data" / "projects" / slug / f"chapter_{ch:03d}"
+                    artwork_dir = chap_dir / "artwork"
+                    exts = {".jpg", ".jpeg", ".png", ".webp"}
+                    avail_panels = sorted([p.name for p in artwork_dir.iterdir() if p.is_file() and p.suffix.lower() in exts]) if artwork_dir.exists() else []
+                    avail_set = set(avail_panels)
+
+                    scene_items: List[SceneItem] = []
+                    for idx, sc in enumerate(scenes_raw, start=1):
+                        if not isinstance(sc, dict):
+                            continue
+                        panel = str(sc.get("suggested_panel") or sc.get("image_file") or "").strip()
+                        if panel not in avail_set and avail_panels:
+                            panel = avail_panels[min(idx - 1, len(avail_panels) - 1)]
+                        hindi_txt = str(sc.get("hindi_text") or sc.get("narration_text") or sc.get("dialogue") or "").strip()
+                        if not hindi_txt:
+                            continue
+                        spk = str(sc.get("speaker") or "Narrator").strip()
+                        gender = str(sc.get("speaker_gender") or ("narrator" if spk.lower() == "narrator" else "male")).strip().lower()
+                        motion = str(sc.get("motion_preset") or ("pan_down" if idx % 2 == 0 else "pan_up")).strip()
+                        if motion not in ("static", "slow_zoom_in", "slow_zoom_out", "pan_up", "pan_down", "pan_left", "pan_right"):
+                            motion = "pan_down"
+                        est_dur = max(2.6, round(len(hindi_txt.split()) * 0.42 + 0.6, 2))
+                        scene_items.append(
+                            SceneItem(
+                                scene_id=f"scene_{len(scene_items) + 1:03d}",
+                                scene_purpose=str(sc.get("scene_purpose") or "dialogue"),
+                                duration=est_dur,
+                                image_file=panel,
+                                motion_preset=motion,
+                                speaker=spk,
+                                speaker_gender=gender,
+                                narration_text=hindi_txt,
+                                subtitle_text=hindi_txt,
+                                supporting_panel_ids=[panel] if panel else [],
+                                verification_notes="Imported from Gemini AI Pro Web Chat (0 API cost)",
+                            )
+                        )
+
+                    if not scene_items:
+                        self._send_json({"ok": False, "error": "Parsed JSON had 0 valid scenes with hindi_text."}, status=400)
+                        return
+
+                    title = str((parsed.get("title") if isinstance(parsed, dict) else "") or f"{series_name} Chapter {ch}").strip()
+                    manifest = SceneManifest(
+                        series=series_name,
+                        chapter=ch,
+                        title=title,
+                        target_duration=round(sum(s.duration for s in scene_items), 1),
+                        scenes=scene_items,
+                    )
+                    scripts_dir = chap_dir / "scripts"
+                    scripts_dir.mkdir(parents=True, exist_ok=True)
+                    save_scene_manifest(manifest, scripts_dir / "scene_manifest.json")
+
+                    # Ensure project.yaml exists so scanner picks it up cleanly
+                    proj_yaml = chap_dir / "project.yaml"
+                    if not proj_yaml.exists():
+                        proj_yaml.write_text(
+                            f"project:\n  series: {series_name}\n  chapter: {ch}\n  title: {title}\n",
+                            encoding="utf-8",
+                        )
+
+                    self._send_json({"ok": True, "scene_count": len(scene_items), "title": title})
+                    return
+
                 if path == "/api/cloud-gpu/config":
                     from manhwa_studio.dashboard.cloud_worker import (
                         fetch_cloud_worker_health,
